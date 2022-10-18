@@ -325,6 +325,9 @@ struct Settings
     //! Whether or not we are reading from a PCAP file
     bool read_from_pcap;
 
+    // add
+    std::string nmea_output;
+
     std::string pose_topic;
     std::string pose_cov_topic;
 

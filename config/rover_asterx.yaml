@@ -3,7 +3,7 @@
 
 # override param "#"
 
-device: tcp://192.168.3.1:28784
+device: tcp://192.168.30.10:28784
 
 serial:
   baudrate: 921600
@@ -77,8 +77,8 @@ publish:
   # For both GNSS and INS Rxs
   navsatfix: true
   gpsfix: false
-  gpgga: true #
-  gprmc: true #
+  gpgga: false #
+  gprmc: false #
   gpst : false
   measepoch: false
   pvtcartesian: false
@@ -140,6 +140,8 @@ activate_debug_log: true
 
 
 # Additional Settings (INS)
+
+nmea_output: GGA+RMC
 
 output_topic:
   pose: /sensing/ins/asterx_i3/pose
