@@ -330,6 +330,9 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
     // Additional Settings
+    param("output_topic.pose", settings_.pose_topic, std::string("/pose"));
+    param("output_topic.pose_with_cov", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
+
     this->declare_parameter("output_stop_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
     settings_.enabled_errors = this->get_parameter("output_stop_limit.INSNavGeod_Error_enable").as_integer_array();
     

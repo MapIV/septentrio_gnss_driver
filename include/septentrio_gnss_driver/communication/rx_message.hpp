@@ -325,6 +325,9 @@ struct Settings
     //! Whether or not we are reading from a PCAP file
     bool read_from_pcap;
 
+    std::string pose_topic;
+    std::string pose_cov_topic;
+
     std::vector<int64_t> enabled_errors;
     float min_lon_cov;
     float min_lat_cov;

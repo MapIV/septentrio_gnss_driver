@@ -2500,8 +2500,8 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 
 				if (output_enable)
 				{
-					node_->publishMessage<PoseStampedMsg>("/localization/pose_estimator/pose", pose_msg);
-					node_->publishMessage<PoseWithCovarianceStampedMsg>("/localization/pose_estimator/pose_with_covariance", pose_cov_msg);
+					node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
+					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
 				}
 				break;
 			}
