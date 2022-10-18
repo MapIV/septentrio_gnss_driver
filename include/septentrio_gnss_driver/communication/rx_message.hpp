@@ -324,6 +324,11 @@ struct Settings
     bool read_from_sbf_log;
     //! Whether or not we are reading from a PCAP file
     bool read_from_pcap;
+
+    std::vector<int64_t> enabled_errors;
+    float min_lon_cov;
+    float min_lat_cov;
+    float min_height_cov;
 };
 
 //! Enum for NavSatFix's status.status field, which is obtained from PVTGeodetic's

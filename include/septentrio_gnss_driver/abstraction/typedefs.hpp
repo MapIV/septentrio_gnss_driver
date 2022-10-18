@@ -87,6 +87,7 @@ typedef rclcpp::Time TimestampRos;
 typedef diagnostic_msgs::msg::DiagnosticArray         DiagnosticArrayMsg;
 typedef diagnostic_msgs::msg::DiagnosticStatus        DiagnosticStatusMsg;
 typedef geometry_msgs::msg::Quaternion                QuaternionMsg;
+typedef geometry_msgs::msg::PoseStamped               PoseStampedMsg;
 typedef geometry_msgs::msg::PoseWithCovarianceStamped PoseWithCovarianceStampedMsg;
 typedef geometry_msgs::msg::TransformStamped          TransformStampedMsg;
 typedef gps_msgs::msg::GPSFix                         GPSFixMsg;
