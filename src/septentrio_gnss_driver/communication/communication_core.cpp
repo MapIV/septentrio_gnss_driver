@@ -656,7 +656,7 @@ void io_comm_rx::Comm_IO::configureRx()
             }
             {
                 std::stringstream ss;
-                ss << "sno, Stream" << std::to_string(stream) << ", IPS1, " + settings_->nmea_output + ", "
+                ss << "sno, Stream" << std::to_string(stream) << ", IPS1, GGA+RMC, "
                    << pvt_interval << " \x0D";
                 ++stream;
                 send(ss.str());

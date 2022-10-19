@@ -1,8 +1,8 @@
 # Configuration Settings for the Rover Rx
+
 # GNSS/INS Parameters
 
-# override param "#"
-
+# device: tcp://192.168.3.1:28784
 device: tcp://192.168.30.10:28784
 
 serial:
@@ -31,11 +31,12 @@ get_spatial_config_from_tf: false
 lock_utm_zone: true
 
 use_ros_axis_orientation: false
+
 receiver_type: ins
 
-multi_antenna: false #
+multi_antenna: false
 
-datum: ETRS89 #
+datum: ETRS89
 
 poi_to_arp:
   delta_e: 0.0
@@ -43,7 +44,7 @@ poi_to_arp:
   delta_u: 0.0
 
 att_offset:
-  heading: -90.0 #
+  heading: -90.0
   pitch: 0.0
   
 ant_type: Unknown
@@ -54,8 +55,8 @@ ant_aux1_serial_nr: Unknown
 leap_seconds: 18
 
 polling_period:
-  pvt: 1000 #
-  rest: 20 #
+  pvt: 1000
+  rest: 20
 
 use_gnss_time: false
 
@@ -69,34 +70,34 @@ ntrip_settings:
   ntrip_version: v2
   send_gga: auto
   rx_has_internet: false
-  rtcm_version: RTCMv3 #
-  rx_input_corrections_tcp: 61000 #
+  rtcm_version: RTCMv3
+  rx_input_corrections_tcp: 61000
   rx_input_corrections_serial: USB2
 
 publish:
   # For both GNSS and INS Rxs
   navsatfix: true
   gpsfix: false
-  gpgga: false #
-  gprmc: false #
+  gpgga: false
+  gprmc: false
   gpst : false
   measepoch: false
   pvtcartesian: false
   pvtgeodetic: false
   poscovcartesian: false
-  poscovgeodetic: true #
+  poscovgeodetic: true
   velcovgeodetic: false
   atteuler: false
-  attcoveuler: true #
+  attcoveuler: true
   pose: true
   pose_with_covariance: true
-  diagnostics: true #
+  diagnostics: true
   # For GNSS Rx only
   gpgsa: false
   gpgsv: false
   # For INS Rx only
   insnavcart: false
-  insnavgeod: true #
+  insnavgeod: true
   extsensormeas: false
   imusetup: false
   velsensorsetup: false
@@ -110,17 +111,17 @@ publish:
 
 ins_spatial_config:
   imu_orientation:
-    theta_x: 0.0 #
-    theta_y: 180.0 # ?
+    theta_x: 180.0
+    theta_y: 0.0
     theta_z: 0.0
   poi_lever_arm:
     delta_x: 0.0
     delta_y: 0.0
     delta_z: 0.0
   ant_lever_arm:
-    x: 0.0 #
-    y: 0.0 #
-    z: -0.900 # ?
+    x: 0.0
+    y: 0.0
+    z: -0.900
   vel_sensor_lever_arm:
     vsm_x: 0.0
     vsm_y: 0.0
@@ -129,10 +130,10 @@ ins_spatial_config:
 ins_initial_heading: auto
 
 ins_std_dev_mask:
-  att_std_dev: 5.0 #
-  pos_std_dev: 10.0 #
+  att_std_dev: 5.0
+  pos_std_dev: 10.0
 
-ins_use_poi: false #
+ins_use_poi: false
 
 # Logger
 
@@ -141,13 +142,15 @@ activate_debug_log: true
 
 # Additional Settings (INS)
 
-nmea_output: GGA+RMC
-
 output_topic:
   pose: /sensing/ins/asterx_i3/pose
   pose_with_cov: /sensing/ins/asterx_i3/pose_with_covariance
 
-output_stop_limit:
+output_stopping_limit:
+  max_longitude_covariance: 0.1
+  max_latitude_covariance: 0.1
+  max_height_covariance: 5.0
+
   INSNavGeod_Error_enable: [7, 20, 21, 23, 24, 28, 29, 30, 31, 32]
 
   # 7:  position output prohibited due to export laws
@@ -161,6 +164,13 @@ output_stop_limit:
   # 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
   # 32: unsupported settings in INS
 
-  max_longitude_covariance: 0.1
-  max_latitude_covariance: 0.1
-  max_height_covariance: 5.0
+  # 7:  輸出法によりポジション出力禁止
+  # 20: ユーザーが要求していないINSソリューション
+  # 21: 十分な有効な外部センサー測定値がありません
+  # 23: 静的アライメント進行中
+  # 24: GNSS PVT を待機中
+  # 28: インモーションアライメント進行中
+  # 29: GNSSヘディングを待っています
+  # 30: IMUが受信機からのPPSと同期するのを待っています
+  # 31: INSソリューションの標準偏差が、setINSStdDevMask コマンドによって設定されたユーザー制限を超えています
+  # 32: INSでサポートされていない設定

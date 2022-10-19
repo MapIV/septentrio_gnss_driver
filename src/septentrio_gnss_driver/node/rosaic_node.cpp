@@ -330,28 +330,26 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
     // Additional Settings
-    param("output_topic.nmea_output", settings_.nmea_output, std::string("GGA+RMC"));
-
     param("output_topic.pose", settings_.pose_topic, std::string("/pose"));
     param("output_topic.pose_with_cov", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
 
-    this->declare_parameter("output_stop_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
-    settings_.enabled_errors = this->get_parameter("output_stop_limit.INSNavGeod_Error_enable").as_integer_array();
+    this->declare_parameter("output_stopping_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
+    settings_.enabled_errors = this->get_parameter("output_stopping_limit.INSNavGeod_Error_enable").as_integer_array();
     
-    param("output_stop_limit.max_longitude_covariance", settings_.min_lon_cov, 0.1f);
-    param("output_stop_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
-    param("output_stop_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
+    param("output_stopping_limit.max_longitude_covariance", settings_.min_lon_cov, 0.1f);
+    param("output_stopping_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
+    param("output_stopping_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
 
-    this->log(LogLevel::INFO , "output_topic.nmea_output: " + settings_.nmea_output);
-    this->log(LogLevel::INFO , "output_topic.pose: " + settings_.pose_topic);
-    this->log(LogLevel::INFO , "output_topic.pose_with_cov: " + settings_.pose_cov_topic);
+    this->log(LogLevel::DEBUG , "output_topic.pose: " + settings_.pose_topic);
+    this->log(LogLevel::DEBUG , "output_topic.pose_with_cov: " + settings_.pose_cov_topic);
+    
     for (auto &&i : settings_.enabled_errors)
     {
-        this->log(LogLevel::INFO , "INSNavGeod_Error_enable: " + std::to_string(i));
+        this->log(LogLevel::DEBUG , "output_stopping_limit.INSNavGeod_Error_enable: " + std::to_string(i));
     }
-    this->log(LogLevel::INFO , "max_longitude_covariance: " + std::to_string(settings_.min_lon_cov));
-    this->log(LogLevel::INFO , "max_latitude_covariance: " + std::to_string(settings_.min_lat_cov));
-    this->log(LogLevel::INFO , "max_height_covariance: " + std::to_string(settings_.min_height_cov));
+    this->log(LogLevel::DEBUG , "output_stopping_limit.max_longitude_covariance: " + std::to_string(settings_.min_lon_cov));
+    this->log(LogLevel::DEBUG , "output_stopping_limit.max_latitude_covariance: " + std::to_string(settings_.min_lat_cov));
+    this->log(LogLevel::DEBUG , "output_stopping_limit.max_height_covariance: " + std::to_string(settings_.min_height_cov));
 
     // INS solution reference point
     param("ins_use_poi", settings_.ins_use_poi, false);
