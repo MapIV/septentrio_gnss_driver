@@ -89,8 +89,8 @@ publish:
   velcovgeodetic: false
   atteuler: false
   attcoveuler: true
-  pose: true
-  pose_with_covariance: true
+  pose: false
+  pose_with_covariance: false
   diagnostics: true
   # For GNSS Rx only
   gpgsa: false
@@ -104,7 +104,7 @@ publish:
   exteventinsnavcart: false
   exteventinsnavgeod: false
   imu: false
-  localization: false
+  localization: true
   tf: false
 
 # INS-Specific Parameters
@@ -142,7 +142,11 @@ activate_debug_log: true
 
 # Additional Settings (INS)
 
+# coordinate: MGRS
+# plane_num: 7
+
 output_topic:
+  navsatfix: /sensing/ins/asterx_i3/navsatfix
   pose: /sensing/ins/asterx_i3/pose
   pose_with_cov: /sensing/ins/asterx_i3/pose_with_covariance
 

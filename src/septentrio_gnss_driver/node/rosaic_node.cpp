@@ -330,6 +330,7 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
     // Additional Settings
+    param("output_topic.navsatfix", settings_.navsatfix_topic, std::string("/navsatfix"));
     param("output_topic.pose", settings_.pose_topic, std::string("/pose"));
     param("output_topic.pose_with_cov", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
 
@@ -340,6 +341,7 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("output_stopping_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
     param("output_stopping_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
 
+    this->log(LogLevel::DEBUG , "output_topic.navsatfix: " + settings_.navsatfix_topic);
     this->log(LogLevel::DEBUG , "output_topic.pose: " + settings_.pose_topic);
     this->log(LogLevel::DEBUG , "output_topic.pose_with_cov: " + settings_.pose_cov_topic);
     

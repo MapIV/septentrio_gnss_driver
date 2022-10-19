@@ -326,8 +326,7 @@ struct Settings
     bool read_from_pcap;
 
     // add
-    std::string nmea_output;
-
+    std::string navsatfix_topic;
     std::string pose_topic;
     std::string pose_cov_topic;
 
