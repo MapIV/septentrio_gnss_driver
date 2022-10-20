@@ -2381,105 +2381,11 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				PoseWithCovarianceStampedMsg pose_cov_msg;
 				PoseStampedMsg pose_msg;
 				NavSatFixMsg navsatfix_msg;
-				try
-				{
-					lla_msg = PoseWithCovarianceStampedCallback();
-				} catch (std::runtime_error& e)
-				{
-					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
-                    break;
-				}
-
-				GNSSStat lla, converted;
-				lla.latitude = lla_msg.pose.pose.position.y;
-				lla.longitude = lla_msg.pose.pose.position.x;
-				lla.altitude = lla_msg.pose.pose.position.z;
-				node_->log(LogLevel::WARN, "aaaaaaaaaaaaaaaaaaaaaaaaa");
-
-				if (settings_->coordinate == "PLANE")
-				{
-					converted = LLA2PLANE(lla, settings_->plane_num);
-				}
-				else if (settings_->coordinate == "MGRS")
-				{
-					try
-					{
-					converted = LLA2MGRS(lla, MGRSPrecision::_1_METER);
-
-					}
-					catch (std::runtime_error& e)
-					{
-					node_->log(LogLevel::DEBUG, "jhdbfkgjhdzskf: " + std::string(e.what()));
-
-					}
-				
-				}
-
-				if (settings_->height_type == "Orthometric")
-				{
-				node_->log(LogLevel::WARN, "ddddddddddddd");
-					converted.z = LLA2OrthometricHeight(lla);
-				node_->log(LogLevel::WARN, "eeeeeeeeeeeeee");
-				}
-				else if (settings_->height_type == "Ellipsoid")
-				{
-					converted.z = lla.altitude;
-				}
-
-				pose_msg.pose.position.x = converted.x;
-				pose_msg.pose.position.y = converted.y;
-				pose_msg.pose.position.z = converted.z;
-
-				pose_cov_msg.pose.pose.position.x = converted.x;
-				pose_cov_msg.pose.pose.position.y = converted.y;
-				pose_cov_msg.pose.pose.position.z = converted.z;
-				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
-
-				navsatfix_msg.latitude = lla_msg.pose.pose.position.x;
-				navsatfix_msg.longitude = lla_msg.pose.pose.position.y;
-				navsatfix_msg.altitude = lla_msg.pose.pose.position.z;
-
-
-				if (settings_->ins_use_poi)
-				{
-					pose_msg.header.frame_id = settings_->poi_frame_id;
-					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
-					navsatfix_msg.header.frame_id = settings_->poi_frame_id;
-				}
-				else
-				{
-					pose_msg.header.frame_id = settings_->frame_id;
-					pose_cov_msg.header.frame_id = settings_->frame_id;
-					navsatfix_msg.header.frame_id = settings_->frame_id;
-				}
-
-				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				pose_msg.header.stamp = timestampToRos(time_obj);
-				pose_cov_msg.header.stamp = timestampToRos(time_obj);
-				navsatfix_msg.header.stamp = timestampToRos(time_obj);
-				insnavgeod_has_arrived_pose_ = false;
-				// Wait as long as necessary (only when reading from SBF/PCAP file)
-				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
-				{
-					wait(time_obj);
-				}
 
 				bool output_enable = true;
 				int error_code = last_insnavgeod_.error;
 
-				// INSNavGeod Error code
-				// 0:  no error
-				// 7:  position output prohibited due to export laws
-				// 20: INS solution not requested by user
-				// 21: not enough valid external sensor measurements
-				// 23: static alignment ongoing
-				// 24: waiting for GNSS PVT
-				// 28: in-motion alignment ongoing
-				// 29: waiting for GNSS heading
-				// 30: waiting for the IMU to synchronize with PPS from the receiver
-				// 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
-				// 32: unsupported settings in INS
-
+				// INS status limitation
 				if (error_code == 0)
 				{
 					for (auto &&err_code : settings_->enabled_errors)
@@ -2532,6 +2438,78 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					}
 				}
 
+				try
+				{
+					lla_msg = PoseWithCovarianceStampedCallback();
+				} catch (std::runtime_error& e)
+				{
+					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
+                    break;
+				}
+
+				GNSSStat lla, converted;
+				lla.latitude = lla_msg.pose.pose.position.y;
+				lla.longitude = lla_msg.pose.pose.position.x;
+				lla.altitude = lla_msg.pose.pose.position.z;
+
+				if (settings_->coordinate == "PLANE")
+				{
+					converted = LLA2PLANE(lla, settings_->plane_num);
+				}
+				else if (settings_->coordinate == "MGRS")
+				{
+					converted = LLA2MGRS(lla, MGRSPrecision::_1_METER);
+				}
+
+				if (settings_->height_type == "Orthometric")
+				{
+					converted.z = LLA2OrthometricHeight(lla);
+				}
+				else if (settings_->height_type == "Ellipsoid")
+				{
+					converted.z = lla.altitude;
+				}
+
+				pose_msg.pose.position.x = converted.x;
+				pose_msg.pose.position.y = converted.y;
+				pose_msg.pose.position.z = converted.z;
+				pose_msg.pose.orientation = lla_msg.pose.pose.orientation;
+
+				pose_cov_msg.pose.pose.position.x = converted.x;
+				pose_cov_msg.pose.pose.position.y = converted.y;
+				pose_cov_msg.pose.pose.position.z = converted.z;
+				pose_cov_msg.pose.pose.orientation = lla_msg.pose.pose.orientation;
+				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
+
+				navsatfix_msg.latitude = lla.latitude;
+				navsatfix_msg.longitude = lla.longitude;
+				navsatfix_msg.altitude = lla.altitude;
+
+				if (settings_->ins_use_poi)
+				{
+					pose_msg.header.frame_id = settings_->poi_frame_id;
+					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
+					navsatfix_msg.header.frame_id = settings_->poi_frame_id;
+				}
+				else
+				{
+					pose_msg.header.frame_id = settings_->frame_id;
+					pose_cov_msg.header.frame_id = settings_->frame_id;
+					navsatfix_msg.header.frame_id = settings_->frame_id;
+				}
+
+				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
+				pose_msg.header.stamp = timestampToRos(time_obj);
+				pose_cov_msg.header.stamp = timestampToRos(time_obj);
+				navsatfix_msg.header.stamp = timestampToRos(time_obj);
+				insnavgeod_has_arrived_pose_ = false;
+				// Wait as long as necessary (only when reading from SBF/PCAP file)
+				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
+				{
+					wait(time_obj);
+				}
+
+				// covariance limitation
 				if (output_enable)
 				{
 					if (pose_cov_msg.pose.covariance[0] >= settings_->min_lon_cov)

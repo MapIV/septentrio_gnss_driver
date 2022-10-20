@@ -165,8 +165,8 @@ pose_output:
   # - MGRS
 
   # height_type:
-  # - Orthometric(標高)
-  # - Ellipsoid(楕円体高)
+  # - Orthometric (標高)
+  # - Ellipsoid (楕円体高)
 
   # plane_num (Required PLANE output only): 1 ~ 19
 
