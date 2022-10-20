@@ -96,8 +96,8 @@ publish:
   velcovgeodetic: false
   atteuler: false
   attcoveuler: true
-  pose: false
-  pose_with_covariance: false
+  pose: true
+  pose_with_covariance: true
   diagnostics: true
   # For GNSS Rx only
   gpgsa: false
@@ -111,7 +111,7 @@ publish:
   exteventinsnavcart: false
   exteventinsnavgeod: false
   imu: false
-  localization: true
+  localization: false
   tf: false
 
 # INS-Specific Parameters

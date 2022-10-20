@@ -2391,9 +2391,10 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				}
 
 				GNSSStat lla, converted;
-				lla.latitude = lla_msg.pose.pose.position.x;
-				lla.longitude = lla_msg.pose.pose.position.y;
+				lla.latitude = lla_msg.pose.pose.position.y;
+				lla.longitude = lla_msg.pose.pose.position.x;
 				lla.altitude = lla_msg.pose.pose.position.z;
+				node_->log(LogLevel::WARN, "aaaaaaaaaaaaaaaaaaaaaaaaa");
 
 				if (settings_->coordinate == "PLANE")
 				{
@@ -2401,12 +2402,24 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				}
 				else if (settings_->coordinate == "MGRS")
 				{
+					try
+					{
 					converted = LLA2MGRS(lla, MGRSPrecision::_1_METER);
+
+					}
+					catch (std::runtime_error& e)
+					{
+					node_->log(LogLevel::DEBUG, "jhdbfkgjhdzskf: " + std::string(e.what()));
+
+					}
+				
 				}
 
 				if (settings_->height_type == "Orthometric")
 				{
+				node_->log(LogLevel::WARN, "ddddddddddddd");
 					converted.z = LLA2OrthometricHeight(lla);
+				node_->log(LogLevel::WARN, "eeeeeeeeeeeeee");
 				}
 				else if (settings_->height_type == "Ellipsoid")
 				{
@@ -2425,6 +2438,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				navsatfix_msg.latitude = lla_msg.pose.pose.position.x;
 				navsatfix_msg.longitude = lla_msg.pose.pose.position.y;
 				navsatfix_msg.altitude = lla_msg.pose.pose.position.z;
+
 
 				if (settings_->ins_use_poi)
 				{
