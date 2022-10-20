@@ -87,6 +87,8 @@ add_library(${library_name} SHARED
    src/septentrio_gnss_driver/communication/rx_message.cpp 
    src/septentrio_gnss_driver/communication/callback_handlers.cpp
    src/septentrio_gnss_driver/communication/pcap_reader.cpp
+   src/septentrio_gnss_driver/converter/convert.cpp 
+   src/septentrio_gnss_driver/converter/geo_pos_conv.cpp 
 )
 target_include_directories(${library_name} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"  

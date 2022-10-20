@@ -118,6 +118,7 @@
 #include <septentrio_gnss_driver/parsers/nmea_parsers/gpgsv.hpp>
 #include <septentrio_gnss_driver/parsers/nmea_parsers/gprmc.hpp>
 #include <septentrio_gnss_driver/parsers/string_utilities.h>
+#include "septentrio_gnss_driver/converter/convert.hpp"
 
 #ifndef RX_MESSAGE_HPP
 #define RX_MESSAGE_HPP
@@ -326,6 +327,10 @@ struct Settings
     bool read_from_pcap;
 
     // add
+    std::string coordinate;
+    std::string height_type;
+    uint32_t plane_num;
+
     std::string navsatfix_topic;
     std::string pose_topic;
     std::string pose_cov_topic;

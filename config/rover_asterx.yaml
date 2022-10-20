@@ -36,7 +36,14 @@ receiver_type: ins
 
 multi_antenna: false
 
-datum: ETRS89
+datum: WGS84
+# WGS84:    Equivalent to Default
+# ETRS89:   European ETRS89 (ETRF2000 realization)
+# NAD83:    NAD83(2011), North American Datum (2011)
+# NAD83_PA: NAD83(PA11), North American Datum, Paciﬁc plate (2011)
+# NAD83_MA: NAD83(MA11), North American Datum, Marianas plate (2011)
+# GDA94:    GDA94(2010), Geocentric Datum of Australia (2010)
+# GDA2020:  GDA2020, Geocentric Datum of Australia 2020
 
 poi_to_arp:
   delta_e: 0.0
@@ -140,15 +147,28 @@ ins_use_poi: false
 activate_debug_log: true
 
 
-# Additional Settings (INS)
+# Additional Settings (INS Only)
 
-# coordinate: MGRS
-# plane_num: 7
+navsatfix_output:
+  navsatfix_topic: /sensing/ins/asterx_i3/navsatfix
 
-output_topic:
-  navsatfix: /sensing/ins/asterx_i3/navsatfix
-  pose: /sensing/ins/asterx_i3/pose
-  pose_with_cov: /sensing/ins/asterx_i3/pose_with_covariance
+pose_output:
+  pose_topic: /sensing/ins/asterx_i3/pose
+  pose_with_cov_topic: /sensing/ins/asterx_i3/pose_with_covariance
+
+  coordinate: MGRS
+  height_type: Orthometric
+  plane_num: 7
+
+  # coordinate:
+  # - PLANE
+  # - MGRS
+
+  # height_type:
+  # - Orthometric(標高)
+  # - Ellipsoid(楕円体高)
+
+  # plane_num (Required PLANE output only): 1 ~ 19
 
 output_stopping_limit:
   max_longitude_covariance: 0.1

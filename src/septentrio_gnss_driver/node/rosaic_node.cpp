@@ -91,8 +91,7 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("aux1_frame_id", settings_.aux1_frame_id, (std::string) "aux1");
     param("vehicle_frame_id", settings_.vehicle_frame_id, settings_.poi_frame_id);
     param("lock_utm_zone", settings_.lock_utm_zone, true);
-    getUint32Param("leap_seconds", settings_.leap_seconds,
-                           static_cast<uint32_t>(18));
+    getUint32Param("leap_seconds", settings_.leap_seconds, static_cast<uint32_t>(18));
 
     // Communication parameters
     param("device", settings_.device, std::string("/dev/ttyACM0"));
@@ -330,10 +329,13 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
     // Additional Settings
-    param("output_topic.navsatfix", settings_.navsatfix_topic, std::string("/navsatfix"));
-    param("output_topic.pose", settings_.pose_topic, std::string("/pose"));
-    param("output_topic.pose_with_cov", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
-
+    param("navsatfix_output.navsatfix_topic", settings_.navsatfix_topic, std::string("/navsatfix"));
+    param("pose_output.pose_topic", settings_.pose_topic, std::string("/pose"));
+    param("pose_output.pose_with_cov_topic", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
+    param("pose_output.coordinate", settings_.coordinate, std::string("PLANE"));
+    param("pose_output.height_type", settings_.height_type, std::string("Orthometric"));
+    getUint32Param("pose_output.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
+    
     this->declare_parameter("output_stopping_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
     settings_.enabled_errors = this->get_parameter("output_stopping_limit.INSNavGeod_Error_enable").as_integer_array();
     
@@ -341,10 +343,13 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("output_stopping_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
     param("output_stopping_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
 
-    this->log(LogLevel::DEBUG , "output_topic.navsatfix: " + settings_.navsatfix_topic);
-    this->log(LogLevel::DEBUG , "output_topic.pose: " + settings_.pose_topic);
-    this->log(LogLevel::DEBUG , "output_topic.pose_with_cov: " + settings_.pose_cov_topic);
-    
+    this->log(LogLevel::DEBUG , "navsatfix_output.navsatfix_topic: " + settings_.navsatfix_topic);
+    this->log(LogLevel::DEBUG , "pose_output.pose_topic: " + settings_.pose_topic);
+    this->log(LogLevel::DEBUG , "pose_output.pose_with_cov_topic: " + settings_.pose_cov_topic);
+    this->log(LogLevel::DEBUG , "pose_output.coordinate: " + settings_.coordinate);
+    this->log(LogLevel::DEBUG , "pose_output.height_type: " + settings_.height_type);
+    this->log(LogLevel::DEBUG , "pose_output.plane_num: " + std::to_string(settings_.plane_num));
+
     for (auto &&i : settings_.enabled_errors)
     {
         this->log(LogLevel::DEBUG , "output_stopping_limit.INSNavGeod_Error_enable: " + std::to_string(i));

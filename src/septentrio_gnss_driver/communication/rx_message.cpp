@@ -2231,7 +2231,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				{
 					wait(time_obj);
 				}
-				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, msg);
+				node_->publishMessage<NavSatFixMsg>("/navsatfix", msg);
 				break;
 			}
 		}
@@ -2264,7 +2264,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				{
 					wait(time_obj);
 				}
-				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, msg);
+				node_->publishMessage<NavSatFixMsg>("/navsatfix", msg);
 				break;
 			}
 		}
@@ -2377,32 +2377,174 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 		{
 			case evINSPoseWithCovarianceStamped:
 			{
-				PoseWithCovarianceStampedMsg msg;
+				PoseWithCovarianceStampedMsg lla_msg;
+				PoseWithCovarianceStampedMsg pose_cov_msg;
+				PoseStampedMsg pose_msg;
+				NavSatFixMsg navsatfix_msg;
 				try
 				{
-					msg = PoseWithCovarianceStampedCallback();
+					lla_msg = PoseWithCovarianceStampedCallback();
 				} catch (std::runtime_error& e)
 				{
 					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
                     break;
 				}
+
+				GNSSStat lla, converted;
+				lla.latitude = lla_msg.pose.pose.position.x;
+				lla.longitude = lla_msg.pose.pose.position.y;
+				lla.altitude = lla_msg.pose.pose.position.z;
+
+				if (settings_->coordinate == "PLANE")
+				{
+					converted = LLA2PLANE(lla, settings_->plane_num);
+				}
+				else if (settings_->coordinate == "MGRS")
+				{
+					converted = LLA2MGRS(lla, MGRSPrecision::_1_METER);
+				}
+
+				if (settings_->height_type == "Orthometric")
+				{
+					converted.z = LLA2OrthometricHeight(lla);
+				}
+				else if (settings_->height_type == "Ellipsoid")
+				{
+					converted.z = lla.altitude;
+				}
+
+				pose_msg.pose.position.x = converted.x;
+				pose_msg.pose.position.y = converted.y;
+				pose_msg.pose.position.z = converted.z;
+
+				pose_cov_msg.pose.pose.position.x = converted.x;
+				pose_cov_msg.pose.pose.position.y = converted.y;
+				pose_cov_msg.pose.pose.position.z = converted.z;
+				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
+
+				navsatfix_msg.latitude = lla_msg.pose.pose.position.x;
+				navsatfix_msg.longitude = lla_msg.pose.pose.position.y;
+				navsatfix_msg.altitude = lla_msg.pose.pose.position.z;
+
 				if (settings_->ins_use_poi)
 				{
-					msg.header.frame_id = settings_->poi_frame_id;
+					pose_msg.header.frame_id = settings_->poi_frame_id;
+					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
+					navsatfix_msg.header.frame_id = settings_->poi_frame_id;
 				}
 				else
 				{
-					msg.header.frame_id = settings_->frame_id;
+					pose_msg.header.frame_id = settings_->frame_id;
+					pose_cov_msg.header.frame_id = settings_->frame_id;
+					navsatfix_msg.header.frame_id = settings_->frame_id;
 				}
+
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				msg.header.stamp = timestampToRos(time_obj);
+				pose_msg.header.stamp = timestampToRos(time_obj);
+				pose_cov_msg.header.stamp = timestampToRos(time_obj);
+				navsatfix_msg.header.stamp = timestampToRos(time_obj);
 				insnavgeod_has_arrived_pose_ = false;
 				// Wait as long as necessary (only when reading from SBF/PCAP file)
 				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
 				{
 					wait(time_obj);
 				}
-				node_->publishMessage<PoseWithCovarianceStampedMsg>("/pose", msg);
+
+				bool output_enable = true;
+				int error_code = last_insnavgeod_.error;
+
+				// INSNavGeod Error code
+				// 0:  no error
+				// 7:  position output prohibited due to export laws
+				// 20: INS solution not requested by user
+				// 21: not enough valid external sensor measurements
+				// 23: static alignment ongoing
+				// 24: waiting for GNSS PVT
+				// 28: in-motion alignment ongoing
+				// 29: waiting for GNSS heading
+				// 30: waiting for the IMU to synchronize with PPS from the receiver
+				// 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
+				// 32: unsupported settings in INS
+
+				if (error_code == 0)
+				{
+					for (auto &&err_code : settings_->enabled_errors)
+					{
+						if (err_code == error_code)
+						{
+							output_enable = false;
+							break;
+						}
+					}	
+				}
+				
+				if (!output_enable)
+				{
+					switch (error_code)
+					{
+					case 7:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: position output prohibited due to export laws.");
+						break;
+					case 20:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: INS solution not requested by user.");
+						break;
+					case 21:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: not enough valid external sensor measurements.");
+						break;
+					case 23:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: static alignment ongoing.");
+						break;
+					case 24:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS PVT.");
+						break;
+					case 28:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: in-motion alignment ongoing.");
+						break;
+					case 29:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS heading.");
+						break;
+					case 30:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for the IMU to synchronize with PPS from the receiver.");
+						break;
+					case 31:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command.");
+						break;
+					case 32:
+						node_->log(LogLevel::WARN, "INSNavGeod Error: unsupported settings in INS.");
+						break;
+					default:
+						node_->log(LogLevel::ERROR, "INSNavGeod Error: Unknown error !");
+						break;
+					}
+				}
+
+				if (output_enable)
+				{
+					if (pose_cov_msg.pose.covariance[0] >= settings_->min_lon_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
+						output_enable = false;
+					}
+
+					if (pose_cov_msg.pose.covariance[7] >= settings_->min_lat_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
+						output_enable = false;
+					}
+					
+					if (pose_cov_msg.pose.covariance[14] >= settings_->min_height_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
+						output_enable = false;
+					}
+				}
+
+				if (output_enable)
+				{
+					node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
+					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
+					node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
+				}
 				break;
 			}
 		}
@@ -2516,141 +2658,18 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                 node_->log(LogLevel::DEBUG, "LocalizationMsg: " + std::string(e.what()));
                 break;
             }
-			// Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-            // msg.header.stamp = timestampToRos(time_obj);
-            // insnavgeod_has_arrived_localization_ = false;
-            // // Wait as long as necessary (only when reading from SBF/PCAP file)
-            // if (settings_->read_from_sbf_log || settings_->read_from_pcap)
-            // {
-            //     wait(time_obj);
-            // }
-            // node_->publishMessage<LocalizationUtmMsg>("/localization", msg);
-
-            // if (settings_->publish_tf)
-            //     node_->publishTf(msg);
-			
-            PoseStampedMsg pose_msg;
-			PoseWithCovarianceStampedMsg pose_cov_msg;
-
-			pose_msg.pose = msg.pose.pose;
-			pose_cov_msg.pose = msg.pose;
-
-			if (settings_->ins_use_poi)
-			{
-				pose_msg.header.frame_id = settings_->poi_frame_id;
-				pose_cov_msg.header.frame_id = settings_->poi_frame_id;
-			}
-			else
-			{
-				pose_msg.header.frame_id = settings_->frame_id;
-				pose_cov_msg.header.frame_id = settings_->frame_id;
-			}
-
 			Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-			pose_msg.header.stamp = timestampToRos(time_obj);
-			pose_cov_msg.header.stamp = timestampToRos(time_obj);
-			insnavgeod_has_arrived_pose_ = false;
-			// Wait as long as necessary (only when reading from SBF/PCAP file)
-			if (settings_->read_from_sbf_log || settings_->read_from_pcap)
-			{
-				wait(time_obj);
-			}
+            msg.header.stamp = timestampToRos(time_obj);
+            insnavgeod_has_arrived_localization_ = false;
+            // Wait as long as necessary (only when reading from SBF/PCAP file)
+            if (settings_->read_from_sbf_log || settings_->read_from_pcap)
+            {
+                wait(time_obj);
+            }
+            node_->publishMessage<LocalizationUtmMsg>("/localization", msg);
 
-			bool output_enable = true;
-			int error_code = last_insnavgeod_.error;
-
-			// INSNavGeod Error code
-			// 0:  no error
-			// 7:  position output prohibited due to export laws
-			// 20: INS solution not requested by user
-			// 21: not enough valid external sensor measurements
-			// 23: static alignment ongoing
-			// 24: waiting for GNSS PVT
-			// 28: in-motion alignment ongoing
-			// 29: waiting for GNSS heading
-			// 30: waiting for the IMU to synchronize with PPS from the receiver
-			// 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
-			// 32: unsupported settings in INS
-
-			if (error_code == 0)
-			{
-				for (auto &&err_code : settings_->enabled_errors)
-				{
-					if (err_code == error_code)
-					{
-						output_enable = false;
-						break;
-					}
-				}	
-			}
-			
-			if (!output_enable)
-			{
-				switch (error_code)
-				{
-				case 7:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: position output prohibited due to export laws.");
-					break;
-				case 20:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: INS solution not requested by user.");
-					break;
-				case 21:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: not enough valid external sensor measurements.");
-					break;
-				case 23:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: static alignment ongoing.");
-					break;
-				case 24:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS PVT.");
-					break;
-				case 28:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: in-motion alignment ongoing.");
-					break;
-				case 29:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS heading.");
-					break;
-				case 30:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for the IMU to synchronize with PPS from the receiver.");
-					break;
-				case 31:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command.");
-					break;
-				case 32:
-					node_->log(LogLevel::WARN, "INSNavGeod Error: unsupported settings in INS.");
-					break;
-				default:
-					node_->log(LogLevel::ERROR, "INSNavGeod Error: Unknown error !");
-					break;
-				}
-			}
-
-			if (output_enable)
-			{
-				if (pose_cov_msg.pose.covariance[0] >= settings_->min_lon_cov)
-				{
-					node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
-					output_enable = false;
-				}
-
-				if (pose_cov_msg.pose.covariance[7] >= settings_->min_lat_cov)
-				{
-					node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
-					output_enable = false;
-				}
-				
-				if (pose_cov_msg.pose.covariance[14] >= settings_->min_height_cov)
-				{
-					node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
-					output_enable = false;
-				}
-			}
-
-			if (output_enable)
-			{
-				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
-				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
-			}
-
+            if (settings_->publish_tf)
+                node_->publishTf(msg);
 			break;
         }
 		case evReceiverStatus:
