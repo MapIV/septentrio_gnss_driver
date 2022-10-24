@@ -14,7 +14,7 @@ login:
   user: ""
   password: ""
 
-frame_id: gnss
+frame_id: ins
 
 imu_frame_id: imu
 
@@ -146,7 +146,6 @@ ins_use_poi: false
 
 activate_debug_log: true
 
-
 # Additional Settings (INS Only)
 
 navsatfix_output:
@@ -169,6 +168,18 @@ pose_output:
   # - Ellipsoid (楕円体高)
 
   # plane_num (Required PLANE output only): 1 ~ 19
+
+baselink_pose_output:
+  # ins_to_baselink:
+  #   x: -1.0
+  #   y: 0.0
+  #   z: -1.0
+  #   yaw: 0.0
+  #   pitch: 0.0
+  #   roll: 0.0
+
+  pose_topic: /sensing/ins/base_link/pose
+  pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
 
 output_stopping_limit:
   max_longitude_covariance: 0.1

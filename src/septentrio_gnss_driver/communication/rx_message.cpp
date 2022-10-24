@@ -2379,7 +2379,9 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			{
 				PoseWithCovarianceStampedMsg lla_msg;
 				PoseWithCovarianceStampedMsg pose_cov_msg;
+				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
 				PoseStampedMsg pose_msg;
+				PoseStampedMsg baselink_pose_msg;
 				NavSatFixMsg navsatfix_msg;
 
 				bool output_enable = true;
@@ -2446,19 +2448,45 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
                     break;
 				}
+				
+				// covariance limitation
+				if (output_enable)
+				{
+					if (lla_msg.pose.covariance[0] >= settings_->min_lon_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
+						output_enable = false;
+					}
+
+					if (lla_msg.pose.covariance[7] >= settings_->min_lat_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
+						output_enable = false;
+					}
+					
+					if (lla_msg.pose.covariance[14] >= settings_->min_height_cov)
+					{
+						node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
+						output_enable = false;
+					}
+				}
 
 				GNSSStat lla, converted;
 				lla.latitude = lla_msg.pose.pose.position.y;
 				lla.longitude = lla_msg.pose.pose.position.x;
 				lla.altitude = lla_msg.pose.pose.position.z;
 
+				navsatfix_msg.latitude = lla.latitude;
+				navsatfix_msg.longitude = lla.longitude;
+				navsatfix_msg.altitude = lla.altitude;
+				
 				if (settings_->coordinate == "PLANE")
 				{
 					converted = LLA2PLANE(lla, settings_->plane_num);
 				}
 				else if (settings_->coordinate == "MGRS")
 				{
-					converted = LLA2MGRS(lla, MGRSPrecision::_1_METER);
+					converted = LLA2MGRS(lla, MGRSPrecision::_1_MIllI_METER);
 				}
 
 				if (settings_->height_type == "Orthometric")
@@ -2481,27 +2509,30 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				pose_cov_msg.pose.pose.orientation = lla_msg.pose.pose.orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				navsatfix_msg.latitude = lla.latitude;
-				navsatfix_msg.longitude = lla.longitude;
-				navsatfix_msg.altitude = lla.altitude;
-
 				if (settings_->ins_use_poi)
 				{
 					pose_msg.header.frame_id = settings_->poi_frame_id;
-					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
-					navsatfix_msg.header.frame_id = settings_->poi_frame_id;
 				}
 				else
 				{
 					pose_msg.header.frame_id = settings_->frame_id;
-					pose_cov_msg.header.frame_id = settings_->frame_id;
-					navsatfix_msg.header.frame_id = settings_->frame_id;
 				}
 
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
 				pose_msg.header.stamp = timestampToRos(time_obj);
-				pose_cov_msg.header.stamp = timestampToRos(time_obj);
-				navsatfix_msg.header.stamp = timestampToRos(time_obj);
+
+				navsatfix_msg.header = pose_msg.header;
+				pose_cov_msg.header = pose_msg.header;
+				baselink_pose_msg.header = pose_msg.header;
+				baselink_pose_cov_msg.header = pose_msg.header;
+
+				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
+				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
+
+				tf2::doTransform(pose_msg, baselink_pose_msg, settings_->ins_to_baselink);
+				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
+				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
+
 				insnavgeod_has_arrived_pose_ = false;
 				// Wait as long as necessary (only when reading from SBF/PCAP file)
 				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
@@ -2509,33 +2540,13 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					wait(time_obj);
 				}
 
-				// covariance limitation
 				if (output_enable)
 				{
-					if (pose_cov_msg.pose.covariance[0] >= settings_->min_lon_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
-						output_enable = false;
-					}
-
-					if (pose_cov_msg.pose.covariance[7] >= settings_->min_lat_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
-						output_enable = false;
-					}
-					
-					if (pose_cov_msg.pose.covariance[14] >= settings_->min_height_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
-						output_enable = false;
-					}
-				}
-
-				if (output_enable)
-				{
+					node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
 					node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
 					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
-					node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
+					node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
+					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->baselink_pose_cov_topic, baselink_pose_cov_msg);
 				}
 				break;
 			}

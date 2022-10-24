@@ -110,6 +110,10 @@
 #include <boost/format.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/tokenizer.hpp>
+
+// ROS include
+#include <tf2/convert.h>
+
 // ROSaic includes
 #include <septentrio_gnss_driver/abstraction/typedefs.hpp>
 #include <septentrio_gnss_driver/crc/crc.h>
@@ -334,6 +338,10 @@ struct Settings
     std::string navsatfix_topic;
     std::string pose_topic;
     std::string pose_cov_topic;
+
+    TransformStampedMsg ins_to_baselink;
+    std::string baselink_pose_topic;
+    std::string baselink_pose_cov_topic;
 
     std::vector<int64_t> enabled_errors;
     float min_lon_cov;
