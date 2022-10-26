@@ -2443,32 +2443,30 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				try
 				{
 					lla_msg = PoseWithCovarianceStampedCallback();
-				} catch (std::runtime_error& e)
+				}
+				catch (std::runtime_error& e)
 				{
 					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
                     break;
 				}
 				
 				// covariance limitation
-				if (output_enable)
+				if (lla_msg.pose.covariance[0] >= settings_->min_lon_cov)
 				{
-					if (lla_msg.pose.covariance[0] >= settings_->min_lon_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
-						output_enable = false;
-					}
+					node_->log(LogLevel::WARN, "Stopped output. Limited by max_longitude_covariance.");
+                    break;
+				}
 
-					if (lla_msg.pose.covariance[7] >= settings_->min_lat_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
-						output_enable = false;
-					}
-					
-					if (lla_msg.pose.covariance[14] >= settings_->min_height_cov)
-					{
-						node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
-						output_enable = false;
-					}
+				if (lla_msg.pose.covariance[7] >= settings_->min_lat_cov)
+				{
+					node_->log(LogLevel::WARN, "Stopped output. Limited by max_latitude_covariance.");
+                    break;
+				}
+				
+				if (lla_msg.pose.covariance[14] >= settings_->min_height_cov)
+				{
+					node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
+                    break;
 				}
 
 				GNSSStat lla, converted;
@@ -2529,7 +2527,21 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
 				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 
-				tf2::doTransform(pose_msg, baselink_pose_msg, settings_->ins_to_baselink);
+				geometry_msgs::msg::TransformStamped rotation, translation;
+				rotation.transform.translation.x = 0.0;
+				rotation.transform.translation.y = 0.0;
+				rotation.transform.translation.z = 0.0;
+				rotation.transform.rotation = lla_msg.pose.pose.orientation;
+
+				tf2::doTransform(settings_->ins_to_baselink, translation, rotation);
+				baselink_pose_msg.pose.position.x += translation.transform.translation.x;
+				baselink_pose_msg.pose.position.y += translation.transform.translation.y;
+				baselink_pose_msg.pose.position.z += translation.transform.translation.z;
+				baselink_pose_msg.pose.orientation.x += translation.transform.rotation.x;
+				baselink_pose_msg.pose.orientation.y += translation.transform.rotation.y;
+				baselink_pose_msg.pose.orientation.z += translation.transform.rotation.z;
+				baselink_pose_msg.pose.orientation.w += translation.transform.rotation.w;
+
 				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
 				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
@@ -2540,14 +2552,11 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					wait(time_obj);
 				}
 
-				if (output_enable)
-				{
-					node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
-					node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
-					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
-					node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
-					node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->baselink_pose_cov_topic, baselink_pose_cov_msg);
-				}
+				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
+				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
+				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
+				node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
+				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->baselink_pose_cov_topic, baselink_pose_cov_msg);
 				break;
 			}
 		}

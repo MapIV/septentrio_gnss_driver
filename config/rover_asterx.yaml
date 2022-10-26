@@ -30,7 +30,7 @@ get_spatial_config_from_tf: false
 
 lock_utm_zone: true
 
-use_ros_axis_orientation: false
+use_ros_axis_orientation: true
 
 receiver_type: ins
 
@@ -170,14 +170,6 @@ pose_output:
   # plane_num (Required PLANE output only): 1 ~ 19
 
 baselink_pose_output:
-  # ins_to_baselink:
-  #   x: -1.0
-  #   y: 0.0
-  #   z: -1.0
-  #   yaw: 0.0
-  #   pitch: 0.0
-  #   roll: 0.0
-
   pose_topic: /sensing/ins/base_link/pose
   pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
 
