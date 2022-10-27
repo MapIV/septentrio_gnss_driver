@@ -2474,26 +2474,36 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				lla.longitude = lla_msg.pose.pose.position.x;
 				lla.altitude = lla_msg.pose.pose.position.z;
 
+				navsatfix_msg.header = pose_msg.header;
 				navsatfix_msg.latitude = lla.latitude;
 				navsatfix_msg.longitude = lla.longitude;
 				navsatfix_msg.altitude = lla.altitude;
+				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
 				
-				if (settings_->coordinate == "PLANE")
+				try
 				{
-					converted = LLA2PLANE(lla, settings_->plane_num);
-				}
-				else if (settings_->coordinate == "MGRS")
-				{
-					converted = LLA2MGRS(lla, MGRSPrecision::_1_MIllI_METER);
-				}
+					if (settings_->coordinate == "PLANE")
+					{
+						converted = LLA2PLANE(lla, settings_->plane_num);
+					}
+					else if (settings_->coordinate == "MGRS")
+					{
+						converted = LLA2MGRS(lla, MGRSPrecision::_1_MIllI_METER);
+					}
 
-				if (settings_->height_type == "Orthometric")
-				{
-					converted.z = LLA2OrthometricHeight(lla);
+					if (settings_->height_type == "Orthometric")
+					{
+						converted.z = LLA2OrthometricHeight(lla);
+					}
+					else if (settings_->height_type == "Ellipsoid")
+					{
+						converted.z = lla.altitude;
+					}
 				}
-				else if (settings_->height_type == "Ellipsoid")
+				catch (std::runtime_error& e)
 				{
-					converted.z = lla.altitude;
+					node_->log(LogLevel::ERROR, "coordinate convert: " + std::string(e.what()));
+                    break;
 				}
 
 				pose_msg.pose.position.x = converted.x;
@@ -2519,7 +2529,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
 				pose_msg.header.stamp = timestampToRos(time_obj);
 
-				navsatfix_msg.header = pose_msg.header;
 				pose_cov_msg.header = pose_msg.header;
 				baselink_pose_msg.header = pose_msg.header;
 				baselink_pose_cov_msg.header = pose_msg.header;
@@ -2533,7 +2542,16 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				rotation.transform.translation.z = 0.0;
 				rotation.transform.rotation = lla_msg.pose.pose.orientation;
 
-				tf2::doTransform(settings_->ins_to_baselink, translation, rotation);
+				try
+				{
+					tf2::doTransform(settings_->ins_to_baselink, translation, rotation);
+				}
+				catch (std::runtime_error& e)
+				{
+					node_->log(LogLevel::ERROR, "base_link convert: " + std::string(e.what()));
+                    break;
+				}
+				
 				baselink_pose_msg.pose.position.x += translation.transform.translation.x;
 				baselink_pose_msg.pose.position.y += translation.transform.translation.y;
 				baselink_pose_msg.pose.position.z += translation.transform.translation.z;
@@ -2552,7 +2570,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					wait(time_obj);
 				}
 
-				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
 				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
 				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
 				node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
