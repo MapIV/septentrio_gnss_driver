@@ -2449,7 +2449,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					node_->log(LogLevel::DEBUG, "PoseWithCovarianceStampedMsg: " + std::string(e.what()));
                     break;
 				}
-				
+
 				// covariance limitation
 				if (lla_msg.pose.covariance[0] >= settings_->min_lon_cov)
 				{
@@ -2474,12 +2474,14 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				lla.longitude = lla_msg.pose.pose.position.x;
 				lla.altitude = lla_msg.pose.pose.position.z;
 
-				navsatfix_msg.header = pose_msg.header;
+				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
+				navsatfix_msg.header.stamp = timestampToRos(time_obj);
+				navsatfix_msg.header.frame_id = "ins";
 				navsatfix_msg.latitude = lla.latitude;
 				navsatfix_msg.longitude = lla.longitude;
 				navsatfix_msg.altitude = lla.altitude;
 				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
-				
+
 				try
 				{
 					if (settings_->coordinate == "PLANE")
@@ -2517,25 +2519,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				pose_cov_msg.pose.pose.orientation = lla_msg.pose.pose.orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				if (settings_->ins_use_poi)
-				{
-					pose_msg.header.frame_id = settings_->poi_frame_id;
-				}
-				else
-				{
-					pose_msg.header.frame_id = settings_->frame_id;
-				}
-
-				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				pose_msg.header.stamp = timestampToRos(time_obj);
-
-				pose_cov_msg.header = pose_msg.header;
-				baselink_pose_msg.header = pose_msg.header;
-				baselink_pose_cov_msg.header = pose_msg.header;
-
-				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
-				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
-
 				geometry_msgs::msg::TransformStamped rotation, translation;
 				rotation.transform.translation.x = 0.0;
 				rotation.transform.translation.y = 0.0;
@@ -2562,6 +2545,25 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 
 				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
 				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
+
+				pose_msg.header = navsatfix_msg.header;
+				pose_cov_msg.header = navsatfix_msg.header;
+				baselink_pose_msg.header = navsatfix_msg.header;
+				baselink_pose_cov_msg.header = navsatfix_msg.header;
+				
+				if (settings_->ins_use_poi)
+				{
+					pose_msg.header.frame_id = settings_->poi_frame_id;
+					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
+				}
+				else
+				{
+					pose_msg.header.frame_id = settings_->frame_id;
+					pose_cov_msg.header.frame_id = settings_->frame_id;
+				}
+
+				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
+				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 
 				insnavgeod_has_arrived_pose_ = false;
 				// Wait as long as necessary (only when reading from SBF/PCAP file)
