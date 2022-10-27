@@ -62,7 +62,8 @@ def generate_launch_description():
         executable='component_container',
         emulate_tty=True,
         composable_node_descriptions=[composable_node],
-        output='screen'
+        output='screen',
+        respawn=True
     )
 
     return launch.LaunchDescription([arg_file_name, arg_file_path, container, tf_imu, tf_gnss, tf_vsm, tf_aux1])
