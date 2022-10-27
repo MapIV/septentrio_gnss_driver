@@ -121,13 +121,13 @@ io_comm_rx::RxMessage::PoseWithCovarianceStampedCallback()
         if ((last_insnavgeod_.sb_list & 2) !=0)
         {
 			double yaw = 0.0;
-			if (validValue(last_insnavgeod_.heading))
+			// if (validValue(last_insnavgeod_.heading))
 				yaw = last_insnavgeod_.heading;
 			double pitch = 0.0;
-			if (validValue(last_insnavgeod_.pitch))
+			// if (validValue(last_insnavgeod_.pitch))
 				pitch = last_insnavgeod_.pitch;
 			double roll = 0.0;
-			if (validValue(last_insnavgeod_.roll))
+			// if (validValue(last_insnavgeod_.roll))
 				roll = last_insnavgeod_.roll;	
             // Attitude
             msg.pose.pose.orientation = parsing_utilities::convertEulerToQuaternion(
@@ -145,20 +145,20 @@ io_comm_rx::RxMessage::PoseWithCovarianceStampedCallback()
         if((last_insnavgeod_.sb_list & 4) !=0)
         {
             // Attitude autocov
-			if (validValue(last_insnavgeod_.roll_std_dev))
+			// if (validValue(last_insnavgeod_.roll_std_dev))
             	msg.pose.covariance[21] = parsing_utilities::square(deg2rad(last_insnavgeod_.
                                             roll_std_dev));
-			else
+			// else
 				msg.pose.covariance[21] = -1.0;
-			if (validValue(last_insnavgeod_.pitch_std_dev))	
+			// if (validValue(last_insnavgeod_.pitch_std_dev))	
             	msg.pose.covariance[28] = parsing_utilities::square(deg2rad(last_insnavgeod_.
                                             pitch_std_dev));
-			else
+			// else
 				msg.pose.covariance[28] = -1.0;
-			if (validValue(last_insnavgeod_.heading_std_dev))
+			// if (validValue(last_insnavgeod_.heading_std_dev))
             	msg.pose.covariance[35] = parsing_utilities::square(deg2rad(last_insnavgeod_.
                                             heading_std_dev));
-			else
+			// else
 				msg.pose.covariance[35] = -1.0;
         }
         else
@@ -2450,6 +2450,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 				
+				/*
 				// covariance limitation
 				if (lla_msg.pose.covariance[0] >= settings_->min_lon_cov)
 				{
@@ -2467,14 +2468,18 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				{
 					node_->log(LogLevel::WARN, "Stopped output. Limited by max_height_covariance.");
                     break;
-				}
+				}*/
 
 				GNSSStat lla, converted;
 				lla.latitude = lla_msg.pose.pose.position.y;
 				lla.longitude = lla_msg.pose.pose.position.x;
 				lla.altitude = lla_msg.pose.pose.position.z;
 
+				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
+				pose_msg.header.stamp = timestampToRos(time_obj);
+
 				navsatfix_msg.header = pose_msg.header;
+				navsatfix_msg.header.frame_id = "ins";
 				navsatfix_msg.latitude = lla.latitude;
 				navsatfix_msg.longitude = lla.longitude;
 				navsatfix_msg.altitude = lla.altitude;
@@ -2526,8 +2531,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					pose_msg.header.frame_id = settings_->frame_id;
 				}
 
-				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				pose_msg.header.stamp = timestampToRos(time_obj);
 
 				pose_cov_msg.header = pose_msg.header;
 				baselink_pose_msg.header = pose_msg.header;
@@ -2536,6 +2539,10 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
 				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 
+				// debug
+				pose_msg.header.frame_id = "map";
+				baselink_pose_msg.header.frame_id = "map";
+				
 				geometry_msgs::msg::TransformStamped rotation, translation;
 				rotation.transform.translation.x = 0.0;
 				rotation.transform.translation.y = 0.0;

@@ -174,9 +174,9 @@ baselink_pose_output:
   pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
 
 output_stopping_limit:
-  max_longitude_covariance: 0.1
-  max_latitude_covariance: 0.1
-  max_height_covariance: 5.0
+  max_longitude_covariance: 100.0
+  max_latitude_covariance: 100.0
+  max_height_covariance: 100.0
 
   INSNavGeod_Error_enable: [7, 20, 21, 23, 24, 28, 29, 30, 31, 32]
 
