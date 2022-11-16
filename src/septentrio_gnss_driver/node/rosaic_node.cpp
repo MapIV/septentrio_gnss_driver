@@ -195,26 +195,6 @@ bool rosaic_node::ROSaicNode::getROSParams()
 
     param("use_ros_axis_orientation", settings_.use_ros_axis_orientation, true);
 
-    // IMU orientation parameter
-    param("ins_spatial_config.imu_orientation.theta_x", settings_.theta_x, 0.0);
-    param("ins_spatial_config.imu_orientation.theta_y", settings_.theta_y, 0.0);
-    param("ins_spatial_config.imu_orientation.theta_z", settings_.theta_z, 0.0);
-    // INS antenna lever arm offset parameter
-    param("ins_spatial_config.ant_lever_arm.x", settings_.ant_lever_x, 0.0);
-    param("ins_spatial_config.ant_lever_arm.y", settings_.ant_lever_y, 0.0);
-    param("ins_spatial_config.ant_lever_arm.z", settings_.ant_lever_z, 0.0);
-    // INS POI ofset paramter
-    param("ins_spatial_config.poi_lever_arm.delta_x", settings_.poi_x, 0.0);
-    param("ins_spatial_config.poi_lever_arm.delta_y", settings_.poi_y, 0.0);
-    param("ins_spatial_config.poi_lever_arm.delta_z", settings_.poi_z, 0.0);
-    // INS velocity sensor lever arm offset parameter
-    param("ins_spatial_config.vel_sensor_lever_arm.vsm_x", settings_.vsm_x, 0.0);
-    param("ins_spatial_config.vel_sensor_lever_arm.vsm_y", settings_.vsm_y, 0.0);
-    param("ins_spatial_config.vel_sensor_lever_arm.vsm_z", settings_.vsm_z, 0.0);
-    // Antenna Attitude Determination parameter
-    param("att_offset.heading", settings_.heading_offset, 0.0);
-    param("att_offset.pitch", settings_.pitch_offset, 0.0);
-
 	// INS Spatial Configuration
     // bool getConfigFromTf;
     // param("get_spatial_config_from_tf", getConfigFromTf, false);
@@ -321,6 +301,26 @@ bool rosaic_node::ROSaicNode::getROSParams()
     //     settings_.pitch_offset   *= -1.0;
     // }
 
+    // IMU orientation parameter
+    param("ins_spatial_config.imu_orientation.theta_x", settings_.theta_x, 0.0);
+    param("ins_spatial_config.imu_orientation.theta_y", settings_.theta_y, 0.0);
+    param("ins_spatial_config.imu_orientation.theta_z", settings_.theta_z, 0.0);
+    // INS antenna lever arm offset parameter
+    param("ins_spatial_config.ant_lever_arm.x", settings_.ant_lever_x, 0.0);
+    param("ins_spatial_config.ant_lever_arm.y", settings_.ant_lever_y, 0.0);
+    param("ins_spatial_config.ant_lever_arm.z", settings_.ant_lever_z, 0.0);
+    // INS POI ofset paramter
+    param("ins_spatial_config.poi_lever_arm.delta_x", settings_.poi_x, 0.0);
+    param("ins_spatial_config.poi_lever_arm.delta_y", settings_.poi_y, 0.0);
+    param("ins_spatial_config.poi_lever_arm.delta_z", settings_.poi_z, 0.0);
+    // INS velocity sensor lever arm offset parameter
+    param("ins_spatial_config.vel_sensor_lever_arm.vsm_x", settings_.vsm_x, 0.0);
+    param("ins_spatial_config.vel_sensor_lever_arm.vsm_y", settings_.vsm_y, 0.0);
+    param("ins_spatial_config.vel_sensor_lever_arm.vsm_z", settings_.vsm_z, 0.0);
+    // Antenna Attitude Determination parameter
+    param("att_offset.heading", settings_.heading_offset, 0.0);
+    param("att_offset.pitch", settings_.pitch_offset, 0.0);
+
     if (std::abs(settings_.heading_offset) > std::numeric_limits<double>::epsilon())
     {
         if (settings_.publish_atteuler)
@@ -335,11 +335,14 @@ bool rosaic_node::ROSaicNode::getROSParams()
         }
     }
 
-    this->log(LogLevel::DEBUG , "IMU roll offset: "+ std::to_string(settings_.theta_x));
-    this->log(LogLevel::DEBUG , "IMU pitch offset: "+ std::to_string(settings_.theta_y));
-    this->log(LogLevel::DEBUG , "IMU yaw offset: "+ std::to_string(settings_.theta_z));
-    this->log(LogLevel::DEBUG , "Ant heading offset: " + std::to_string(settings_.heading_offset));
-    this->log(LogLevel::DEBUG , "Ant pitch offset: " + std::to_string(settings_.pitch_offset));
+    this->log(LogLevel::DEBUG , "imu_orientation.theta_x: " + std::to_string(settings_.theta_x));
+    this->log(LogLevel::DEBUG , "imu_orientation.theta_y: " + std::to_string(settings_.theta_y));
+    this->log(LogLevel::DEBUG , "imu_orientation.theta_z: " + std::to_string(settings_.theta_z));
+    this->log(LogLevel::DEBUG , "ant_lever_arm.x: " + std::to_string(settings_.ant_lever_x));
+    this->log(LogLevel::DEBUG , "ant_lever_arm.y: " + std::to_string(settings_.ant_lever_y));
+    this->log(LogLevel::DEBUG , "ant_lever_arm.z: " + std::to_string(settings_.ant_lever_z));
+    this->log(LogLevel::DEBUG , "att_offset.heading:" + std::to_string(settings_.heading_offset));
+    this->log(LogLevel::DEBUG , "att_offset.pitch: " + std::to_string(settings_.pitch_offset));
     
     // ins_initial_heading param
     param("ins_initial_heading", settings_.ins_initial_heading, std::string("auto"));
