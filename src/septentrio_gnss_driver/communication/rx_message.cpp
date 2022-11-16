@@ -2405,34 +2405,34 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					switch (error_code)
 					{
 					case 7:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: position output prohibited due to export laws.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.7: position output prohibited due to export laws.");
 						break;
 					case 20:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: INS solution not requested by user.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.20: INS solution not requested by user.");
 						break;
 					case 21:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: not enough valid external sensor measurements.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.21: not enough valid external sensor measurements.");
 						break;
 					case 23:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: static alignment ongoing.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.23: static alignment ongoing.");
 						break;
 					case 24:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS PVT.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.24: waiting for GNSS PVT.");
 						break;
 					case 28:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: in-motion alignment ongoing.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.28: in-motion alignment ongoing.");
 						break;
 					case 29:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for GNSS heading.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.29: waiting for GNSS heading.");
 						break;
 					case 30:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: waiting for the IMU to synchronize with PPS from the receiver.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.30: waiting for the IMU to synchronize with PPS from the receiver.");
 						break;
 					case 31:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command.");
 						break;
 					case 32:
-						node_->log(LogLevel::WARN, "INSNavGeod Error: unsupported settings in INS.");
+						node_->log(LogLevel::WARN, "INSNavGeod Error.32: unsupported settings in INS.");
 						break;
 					default:
 						node_->log(LogLevel::ERROR, "INSNavGeod Error: Unknown error !");

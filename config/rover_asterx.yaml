@@ -2,8 +2,8 @@
 
 # GNSS/INS Parameters
 
-# device: tcp://192.168.3.1:28784
-device: tcp://192.168.30.10:28784
+device: tcp://192.168.3.1:28784
+# device: tcp://192.168.30.10:28784
 
 serial:
   baudrate: 921600
@@ -51,7 +51,7 @@ poi_to_arp:
   delta_u: 0.0
 
 att_offset:
-  heading: -90.0
+  heading: 90.0
   pitch: 0.0
   
 ant_type: Unknown
@@ -78,7 +78,7 @@ ntrip_settings:
   send_gga: auto
   rx_has_internet: false
   rtcm_version: RTCMv3
-  rx_input_corrections_tcp: 61000
+  rx_input_corrections_tcp: 62001
   rx_input_corrections_serial: USB2
 
 publish:
@@ -126,9 +126,9 @@ ins_spatial_config:
     delta_y: 0.0
     delta_z: 0.0
   ant_lever_arm:
-    x: 0.0
-    y: 0.0
-    z: -0.900
+    x: 0.195
+    y: -0.340
+    z: -0.024
   vel_sensor_lever_arm:
     vsm_x: 0.0
     vsm_y: 0.0
@@ -138,7 +138,7 @@ ins_initial_heading: auto
 
 ins_std_dev_mask:
   att_std_dev: 5.0
-  pos_std_dev: 10.0
+  pos_std_dev: 1.0
 
 ins_use_poi: false
 
@@ -170,12 +170,23 @@ pose_output:
   # plane_num (Required PLANE output only): 1 ~ 19
 
 baselink_pose_output:
+  config_from_tf: false
+  
+  # using config_from_tf == false
+  ins_to_baselink:
+    x: 0.65
+    y: 0.0
+    z: 1.353
+    yaw: 0.0
+    pitch: 0.0
+    roll: 0.0
+
   pose_topic: /sensing/ins/base_link/pose
   pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
 
 output_stopping_limit:
-  max_longitude_covariance: 0.1
-  max_latitude_covariance: 0.1
+  max_longitude_covariance: 1.0
+  max_latitude_covariance: 1.0
   max_height_covariance: 5.0
 
   INSNavGeod_Error_enable: [7, 20, 21, 23, 24, 28, 29, 30, 31, 32]
