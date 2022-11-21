@@ -334,6 +334,7 @@ struct Settings
     std::string coordinate;
     std::string height_type;
     uint32_t plane_num;
+    bool correct_heading;
 
     std::string navsatfix_topic;
     std::string pose_topic;

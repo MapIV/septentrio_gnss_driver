@@ -2508,15 +2508,31 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
+				// heading correction
+				geometry_msgs::msg::Quaternion corrected_orientation;
+				if (settings_->correct_heading)
+				{
+					double meridian_convergence = getMeridianConvergence(lla, converted);
+
+					double yaw, pitch, roll;
+					QuatMsg2RPY(lla_msg.pose.pose.orientation, roll, pitch, yaw);
+					yaw -= meridian_convergence;
+					RPY2QuatMsg(roll, pitch, yaw, corrected_orientation);
+				}
+				else
+				{
+					corrected_orientation = lla_msg.pose.pose.orientation;
+				}
+
 				pose_msg.pose.position.x = converted.x;
 				pose_msg.pose.position.y = converted.y;
 				pose_msg.pose.position.z = converted.z;
-				pose_msg.pose.orientation = lla_msg.pose.pose.orientation;
+				pose_msg.pose.orientation = corrected_orientation;
 
 				pose_cov_msg.pose.pose.position.x = converted.x;
 				pose_cov_msg.pose.pose.position.y = converted.y;
 				pose_cov_msg.pose.pose.position.z = converted.z;
-				pose_cov_msg.pose.pose.orientation = lla_msg.pose.pose.orientation;
+				pose_cov_msg.pose.pose.orientation = corrected_orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
 				geometry_msgs::msg::TransformStamped rotation, translation;

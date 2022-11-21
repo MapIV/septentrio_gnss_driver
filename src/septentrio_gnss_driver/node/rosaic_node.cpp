@@ -360,6 +360,8 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("pose_output.height_type", settings_.height_type, std::string("Orthometric"));
     getUint32Param("pose_output.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
 
+    param("baselink_pose_output.correct_meridian_convergence", settings_.correct_heading, true);
+
     bool config_from_tf = false;
     param("baselink_pose_output.config_from_tf", config_from_tf, false);
     if (config_from_tf)
