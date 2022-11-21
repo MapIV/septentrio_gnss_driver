@@ -30,7 +30,7 @@
       gprmc: false
       gpgsa: false
       gpgsv: false
-      pvtcartesian: false
+      pvtcartesian: false  # required to velocity publish
       pvtgeodetic: true  # required to navsatfix publish
       poscovcartesian: false
       poscovgeodetic: true  # required to navsatfix publish
@@ -40,4 +40,5 @@
       navsatfix: true
       gpsfix: false
       pose: false
+      velocity: false
       diagnostics: false

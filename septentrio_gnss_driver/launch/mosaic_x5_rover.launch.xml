@@ -16,6 +16,7 @@
     <remap from="navsatfix" to="septentrio/nav_sat_fix" />
     <remap from="gpsfix" to="septentrio/gpsfix" />
     <remap from="pose" to="septentrio/pose" />
+    <remap from="velocity" to="septentrio/velocity" />
     <remap from="diagnostics" to="septentrio/diagnostics" />
     <param from="$(find-pkg-share septentrio_gnss_driver)/config/mosaic_x5_rover.param.yaml" />
   </node>

@@ -121,6 +121,7 @@
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/time_reference.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "diagnostic_msgs/msg/diagnostic_array.hpp"
 #include "diagnostic_msgs/msg/diagnostic_status.hpp"
 #include "gps_msgs/msg/gps_fix.hpp"
@@ -181,6 +182,7 @@ extern std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::TimeReference>> g_gps
 extern std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::NavSatFix>> g_navsatfix_publisher;
 extern std::shared_ptr<rclcpp::Publisher<gps_msgs::msg::GPSFix>> g_gpsfix_publisher;
 extern std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>> g_posewithcovariancestamped_publisher;
+extern std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>> g_twistwithcovariancestamped_publisher;
 extern std::shared_ptr<rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>> g_diagnosticarray_publisher;
 extern const uint32_t g_ROS_QUEUE_SIZE;
 extern rclcpp::Time g_unix_time;

@@ -93,6 +93,7 @@ extern std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::TimeReference>> g_gps
 extern std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::NavSatFix>> g_navsatfix_publisher;
 extern std::shared_ptr<rclcpp::Publisher<gps_msgs::msg::GPSFix>> g_gpsfix_publisher;
 extern std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>> g_posewithcovariancestamped_publisher;
+extern std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>> g_twistwithcovariancestamped_publisher;
 extern std::shared_ptr<rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>> g_diagnosticarray_publisher;
 extern const uint32_t g_ROS_QUEUE_SIZE;
 

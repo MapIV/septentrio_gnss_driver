@@ -1170,6 +1170,26 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				}
 			}
 			g_pvtcartesian_publisher->publish(*msg);
+			geometry_msgs::msg::TwistWithCovarianceStamped::SharedPtr twist_msg = std::make_shared<geometry_msgs::msg::TwistWithCovarianceStamped>();
+			twist_msg->header.stamp  = msg->header.stamp;
+			twist_msg->header.frame_id = "earth";
+			twist_msg->twist.twist.linear.x = msg->vx;
+			twist_msg->twist.twist.linear.y = msg->vy;
+			twist_msg->twist.twist.linear.z = msg->vz;
+			if(msg->vx != -20000000000.0 && msg->vy != -20000000000.0 && msg->vz != -20000000000.0)
+			{
+					// TODO: temporary covariance value
+					twist_msg->twist.covariance[0] = 100;
+					twist_msg->twist.covariance[7] = 100;
+					twist_msg->twist.covariance[14] = 100;
+			}
+			else
+			{
+					twist_msg->twist.covariance[0] = -20000000000.0;
+					twist_msg->twist.covariance[7] = -20000000000.0;
+					twist_msg->twist.covariance[14] = -20000000000.0;
+			}
+			g_twistwithcovariancestamped_publisher->publish(*twist_msg);
 			break;
 		}
 		case evPVTGeodetic: // Position and velocity in geodetic coordinate frame (ENU frame)

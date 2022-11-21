@@ -45,6 +45,7 @@ rosaic_node::ROSaicNode::ROSaicNode() : Node("septentrio_gnss")
 	g_publish_navsatfix = declare_parameter<bool>("publish.navsatfix", true);
 	g_publish_gpsfix = declare_parameter<bool>("publish.gpsfix", true);
 	g_publish_pose = declare_parameter<bool>("publish.pose", true);
+	g_publish_velocity = declare_parameter<bool>("publish.velocity", true);
 	g_publish_diagnostics = declare_parameter<bool>("publish.diagnostics", true);
 	int leap_seconds = declare_parameter<int>("leap_seconds", 18);
 	getROSInt("leap_seconds", g_leap_seconds, static_cast<uint32_t>(18), leap_seconds);
@@ -720,6 +721,15 @@ void rosaic_node::ROSaicNode::defineMessages()
 		IO.handlers_.callbackmap_ = IO.getHandlers().insert<geometry_msgs::msg::PoseWithCovarianceStamped>("PoseWithCovarianceStamped");
 		g_posewithcovariancestamped_publisher = create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("pose", durable_qos);
 	}
+	if (g_publish_velocity == true)
+	{
+		if (publish_pvtcartesian_ == false)
+		{
+			RCLCPP_ERROR(this->get_logger(), "For a proper TwistWithCovarianceStamped message, please set the publish/pvtcartesian ROSaic parameters  to true.");
+		}
+		IO.handlers_.callbackmap_ = IO.getHandlers().insert<geometry_msgs::msg::TwistWithCovarianceStamped>("TwistWithCovarianceStamped");
+		g_twistwithcovariancestamped_publisher = create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("velocity", durable_qos);
+	}
 	if (g_publish_diagnostics == true)
 	{
 		IO.handlers_.callbackmap_ = IO.getHandlers().insert<diagnostic_msgs::msg::DiagnosticArray>("DiagnosticArray");
@@ -745,6 +755,8 @@ bool g_publish_navsatfix;
 bool g_publish_gpsfix;
 //! Whether or not to publish the geometry_msgs::PoseWithCovarianceStamped message
 bool g_publish_pose;
+//! Whether or not to publish the geometry_msgs::TwistWithCovarianceStamped message
+bool g_publish_velocity;
 //! Whether or not to publish the diagnostic_msgs::DiagnosticArray message
 bool g_publish_diagnostics;
 //! The frame ID used in the header of every published ROS message
@@ -830,6 +842,7 @@ std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::TimeReference>> g_gpst_publi
 std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::NavSatFix>> g_navsatfix_publisher;
 std::shared_ptr<rclcpp::Publisher<gps_msgs::msg::GPSFix>> g_gpsfix_publisher;
 std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>> g_posewithcovariancestamped_publisher;
+std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::TwistWithCovarianceStamped>> g_twistwithcovariancestamped_publisher;
 std::shared_ptr<rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>> g_diagnosticarray_publisher;
 //! You must initialize the NodeHandle in the "main" function (or in any method called 
 //! indirectly or directly by the main function). 

@@ -58,5 +58,6 @@ publish:
   navsatfix: true
   gpsfix: false
   pose: false
+  velocity: false
   diagnostics: false
 

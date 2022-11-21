@@ -116,6 +116,7 @@ extern bool g_publish_navsatfix;
 extern bool g_publish_gpsfix;
 extern bool g_publish_gpst;
 extern bool g_publish_pose;
+extern bool g_publish_velocity;
 extern bool g_publish_diagnostics;
 extern bool g_response_received;
 extern std::mutex g_response_mutex;
