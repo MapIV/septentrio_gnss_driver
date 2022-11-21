@@ -96,7 +96,7 @@ double getDotNorm(Vector2d a, Vector2d b);
 
 double getCrossNorm(Vector2d a, Vector2d b);
 
-double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & mgrs);
+double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & converted, const std::string & coordinate, const int & plane_zone)
 
 void QuatMsg2RPY(const geometry_msgs::msg::Quaternion & quat_msg, double & roll, double & pitch, double & yaw);
 

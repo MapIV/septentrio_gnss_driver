@@ -2512,7 +2512,15 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				geometry_msgs::msg::Quaternion corrected_orientation;
 				if (settings_->correct_heading)
 				{
-					double meridian_convergence = getMeridianConvergence(lla, converted);
+					double meridian_convergence = 0.0;
+					if (settings_->coordinate == "PLANE")
+					{
+						meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, settings_->plane_num);
+					}
+					else if (settings_->coordinate == "MGRS")
+					{
+						meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, 0);
+					}
 
 					double yaw, pitch, roll;
 					QuatMsg2RPY(lla_msg.pose.pose.orientation, roll, pitch, yaw);

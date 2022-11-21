@@ -133,28 +133,34 @@ double getCrossNorm(Vector2d a, Vector2d b)
   return a.x * b.y - a.y * b.x;
 }
 
-double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & mgrs)
+double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & converted, const std::string & coordinate, const int & plane_zone)
 {
   GNSSStat offset_lla = lla;
-  GNSSStat offset_mgrs = mgrs;
+  GNSSStat offset_converted = converted;
 
-  GNSSStat offset_lla_mgrs;
+  GNSSStat offset_lla_converted;
 
   offset_lla.latitude += 0.01; // neary 1.11km
-  offset_mgrs.y += 1000.0; // 1km
+  offset_converted.y += 1000.0; // 1km
+  if (coordinate == "PLANE")
+  {
+    offset_lla_converted = LLA2PLANE(offset_lla, plane_zone);
+  }
+  else if (coordinate == "MGRS")
+  {
+    offset_lla_converted = LLA2MGRS(offset_lla, MGRSPrecision::_1_MIllI_METER);
+  }
 
-	offset_lla_mgrs = LLA2MGRS(offset_lla, MGRSPrecision::_1_MIllI_METER);
+  Vector2d offset_converted_vec;
+  Vector2d offset_lla_converted_vec;
 
-  Vector2d offset_mgrs_vec;
-  Vector2d offset_lla_mgrs_vec;
-
-  offset_mgrs_vec.x = offset_mgrs.x - mgrs.x;
-  offset_mgrs_vec.y = offset_mgrs.y - mgrs.y;
-  offset_lla_mgrs_vec.x = offset_lla_mgrs.x - mgrs.x;
-  offset_lla_mgrs_vec.y = offset_lla_mgrs.y - mgrs.y;
+  offset_converted_vec.x = offset_converted.x - converted.x;
+  offset_converted_vec.y = offset_converted.y - converted.y;
+  offset_lla_converted_vec.x = offset_lla_converted.x - converted.x;
+  offset_lla_converted_vec.y = offset_lla_converted.y - converted.y;
   
-  double dot_norm = getDotNorm(offset_mgrs_vec, offset_lla_mgrs_vec);
-  double cross_norm = getCrossNorm(offset_mgrs_vec, offset_lla_mgrs_vec);
+  double dot_norm = getDotNorm(offset_converted_vec, offset_lla_converted_vec);
+  double cross_norm = getCrossNorm(offset_converted_vec, offset_lla_converted_vec);
 
   return atan2(cross_norm, dot_norm);
 }
