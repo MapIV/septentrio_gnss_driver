@@ -2381,6 +2381,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				PoseWithCovarianceStampedMsg pose_cov_msg;
 				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
 				PoseStampedMsg pose_msg;
+				PoseStampedMsg pose_msg_raw;
 				PoseStampedMsg baselink_pose_msg;
 				NavSatFixMsg navsatfix_msg;
 
@@ -2508,19 +2509,18 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
+				pose_msg_raw.header = navsatfix_msg.header;
+				pose_msg_raw.pose.position.x = converted.x;
+				pose_msg_raw.pose.position.y = converted.y;
+				pose_msg_raw.pose.position.z = converted.z;
+				pose_msg_raw.pose.orientation = lla_msg.pose.pose.orientation;
+				node_->publishMessage<PoseStampedMsg>("/ins_pose_raw", pose_msg_raw);
+
 				// heading correction
 				geometry_msgs::msg::Quaternion corrected_orientation;
 				if (settings_->correct_heading)
 				{
-					double meridian_convergence = 0.0;
-					if (settings_->coordinate == "PLANE")
-					{
-						meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, settings_->plane_num);
-					}
-					else if (settings_->coordinate == "MGRS")
-					{
-						meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, 0);
-					}
+					double meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, settings_->plane_num);
 
 					double yaw, pitch, roll;
 					QuatMsg2RPY(lla_msg.pose.pose.orientation, roll, pitch, yaw);

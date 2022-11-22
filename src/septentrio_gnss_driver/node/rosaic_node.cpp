@@ -354,14 +354,14 @@ bool rosaic_node::ROSaicNode::getROSParams()
     // Additional Settings
     param("navsatfix_output.navsatfix_topic", settings_.navsatfix_topic, std::string("/navsatfix"));
 
+    param("coordinate_convert.coordinate", settings_.coordinate, std::string("PLANE"));
+    param("coordinate_convert.height_type", settings_.height_type, std::string("Orthometric"));
+    getUint32Param("coordinate_convert.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
+    param("coordinate_convert.correct_meridian_convergence", settings_.correct_heading, true);
+
     param("pose_output.pose_topic", settings_.pose_topic, std::string("/pose"));
     param("pose_output.pose_with_cov_topic", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
-    param("pose_output.coordinate", settings_.coordinate, std::string("PLANE"));
-    param("pose_output.height_type", settings_.height_type, std::string("Orthometric"));
-    getUint32Param("pose_output.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
-
-    param("baselink_pose_output.correct_meridian_convergence", settings_.correct_heading, true);
-
+    
     bool config_from_tf = false;
     param("baselink_pose_output.config_from_tf", config_from_tf, false);
     if (config_from_tf)

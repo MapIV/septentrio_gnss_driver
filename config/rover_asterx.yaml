@@ -156,10 +156,11 @@ activate_debug_log: true
 navsatfix_output:
   navsatfix_topic: /sensing/ins/asterx_i3/navsatfix
 
-pose_output:
+coordinate_convert:
   coordinate: MGRS
   height_type: Orthometric
   plane_num: 7
+  correct_meridian_convergence: true
 
   # coordinate:
   # - PLANE
@@ -171,9 +172,9 @@ pose_output:
 
   # plane_num (Required PLANE output only): 1 ~ 19
   
-  # 子午線収差角補正
-  correct_meridian_convergence: true
+  # correct_meridian_convergence: 子午線収差角補正
 
+pose_output:
   pose_topic: /sensing/ins/asterx_i3/pose
   pose_with_cov_topic: /sensing/ins/asterx_i3/pose_with_covariance
 
