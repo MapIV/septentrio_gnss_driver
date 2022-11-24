@@ -370,21 +370,12 @@ bool rosaic_node::ROSaicNode::getROSParams()
     }
     else
     {
-        float ins_to_baselink_x, ins_to_baselink_y, ins_to_baselink_z, ins_to_baselink_yaw, ins_to_baselink_pitch, ins_to_baselink_roll;
+        float ins_to_baselink_x, ins_to_baselink_y, ins_to_baselink_z;
         tf2::Quaternion tf2_quat;
 
         param("baselink_pose_output.ins_to_baselink.x", ins_to_baselink_x, 0.0f);
         param("baselink_pose_output.ins_to_baselink.y", ins_to_baselink_y, 0.0f);
         param("baselink_pose_output.ins_to_baselink.z", ins_to_baselink_z, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.yaw", ins_to_baselink_yaw, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.pitch", ins_to_baselink_pitch, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.roll", ins_to_baselink_roll, 0.0f);
-
-        tf2_quat.setEuler(ins_to_baselink_yaw, ins_to_baselink_pitch, ins_to_baselink_roll);
-        settings_.ins_to_baselink.transform.translation.x = ins_to_baselink_x;
-        settings_.ins_to_baselink.transform.translation.y = ins_to_baselink_y;
-        settings_.ins_to_baselink.transform.translation.z = ins_to_baselink_z;
-        settings_.ins_to_baselink.transform.rotation = tf2::toMsg(tf2_quat);
     }
 
     param("baselink_pose_output.pose_topic", settings_.baselink_pose_topic, std::string("/baslink_pose"));

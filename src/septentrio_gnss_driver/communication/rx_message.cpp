@@ -2378,12 +2378,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			case evINSPoseWithCovarianceStamped:
 			{
 				PoseWithCovarianceStampedMsg lla_msg;
-				PoseWithCovarianceStampedMsg pose_cov_msg;
-				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
-				PoseStampedMsg pose_msg;
-				PoseStampedMsg pose_msg_raw;
-				PoseStampedMsg baselink_pose_msg;
-				NavSatFixMsg navsatfix_msg;
 
 				bool output_enable = true;
 				int error_code = last_insnavgeod_.error;
@@ -2470,18 +2464,24 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
-				GNSSStat lla, converted;
-				lla.latitude = lla_msg.pose.pose.position.y;
-				lla.longitude = lla_msg.pose.pose.position.x;
-				lla.altitude = lla_msg.pose.pose.position.z;
-
+				// raw pose output
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				navsatfix_msg.header.stamp = timestampToRos(time_obj);
-				navsatfix_msg.header.frame_id = "ins";
-				navsatfix_msg.latitude = lla.latitude;
-				navsatfix_msg.longitude = lla.longitude;
-				navsatfix_msg.altitude = lla.altitude;
+				lla_msg.header.stamp = timestampToRos(time_obj);
+				lla_msg.header.frame_id = settings_->frame_id;
+				node_->publishMessage<PoseWithCovarianceStampedMsg>("/ins_pose_raw", lla_msg);
+
+				NavSatFixMsg navsatfix_msg;
+				navsatfix_msg.header = lla_msg.header;
+				navsatfix_msg.latitude = lla_msg.pose.pose.position.y;
+				navsatfix_msg.longitude = lla_msg.pose.pose.position.x;
+				navsatfix_msg.altitude = lla_msg.pose.pose.position.z;
 				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
+
+				// convert coordinate
+				GNSSStat lla, converted;
+				lla.latitude = navsatfix_msg.latitude;
+				lla.longitude = navsatfix_msg.longitude;
+				lla.altitude = navsatfix_msg.altitude;
 
 				try
 				{
@@ -2509,13 +2509,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
-				pose_msg_raw.header = navsatfix_msg.header;
-				pose_msg_raw.pose.position.x = converted.x;
-				pose_msg_raw.pose.position.y = converted.y;
-				pose_msg_raw.pose.position.z = converted.z;
-				pose_msg_raw.pose.orientation = lla_msg.pose.pose.orientation;
-				node_->publishMessage<PoseStampedMsg>("/ins_pose_raw", pose_msg_raw);
-
 				// heading correction
 				geometry_msgs::msg::Quaternion corrected_orientation;
 				if (settings_->correct_heading)
@@ -2532,62 +2525,52 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 					corrected_orientation = lla_msg.pose.pose.orientation;
 				}
 
+				PoseStampedMsg pose_msg;
+				pose_msg.header = lla_msg.header;
 				pose_msg.pose.position.x = converted.x;
 				pose_msg.pose.position.y = converted.y;
 				pose_msg.pose.position.z = converted.z;
 				pose_msg.pose.orientation = corrected_orientation;
 
+				PoseWithCovarianceStampedMsg pose_cov_msg;
+				pose_cov_msg.header = lla_msg.header;
 				pose_cov_msg.pose.pose.position.x = converted.x;
 				pose_cov_msg.pose.pose.position.y = converted.y;
 				pose_cov_msg.pose.pose.position.z = converted.z;
 				pose_cov_msg.pose.pose.orientation = corrected_orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				geometry_msgs::msg::TransformStamped rotation, translation;
+				// convert base_link
+				TransformStampedMsg rotation;
 				rotation.transform.translation.x = 0.0;
 				rotation.transform.translation.y = 0.0;
 				rotation.transform.translation.z = 0.0;
-				rotation.transform.rotation = lla_msg.pose.pose.orientation;
+				rotation.transform.rotation = corrected_orientation;
 
+				TransformStampedMsg converted_ins_to_baselink;
 				try
 				{
-					tf2::doTransform(settings_->ins_to_baselink, translation, rotation);
+					tf2::doTransform(settings_->ins_to_baselink, converted_ins_to_baselink, rotation);
 				}
 				catch (std::runtime_error& e)
 				{
 					node_->log(LogLevel::ERROR, "base_link convert: " + std::string(e.what()));
                     break;
 				}
-				
-				baselink_pose_msg.pose.position.x += translation.transform.translation.x;
-				baselink_pose_msg.pose.position.y += translation.transform.translation.y;
-				baselink_pose_msg.pose.position.z += translation.transform.translation.z;
-				baselink_pose_msg.pose.orientation.x += translation.transform.rotation.x;
-				baselink_pose_msg.pose.orientation.y += translation.transform.rotation.y;
-				baselink_pose_msg.pose.orientation.z += translation.transform.rotation.z;
-				baselink_pose_msg.pose.orientation.w += translation.transform.rotation.w;
 
+				PoseStampedMsg baselink_pose_msg;
+				baselink_pose_msg.header = lla_msg.header;
+				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
+				baselink_pose_msg.pose.position.x = converted.x + converted_ins_to_baselink.transform.translation.x;
+				baselink_pose_msg.pose.position.y = converted.y + converted_ins_to_baselink.transform.translation.y;
+				baselink_pose_msg.pose.position.z = converted.z + converted_ins_to_baselink.transform.translation.z;
+				baselink_pose_msg.pose.orientation = corrected_orientation;
+
+				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
+				baselink_pose_cov_msg.header = lla_msg.header;
+				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
 				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
-
-				pose_msg.header = navsatfix_msg.header;
-				pose_cov_msg.header = navsatfix_msg.header;
-				baselink_pose_msg.header = navsatfix_msg.header;
-				baselink_pose_cov_msg.header = navsatfix_msg.header;
-				
-				if (settings_->ins_use_poi)
-				{
-					pose_msg.header.frame_id = settings_->poi_frame_id;
-					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
-				}
-				else
-				{
-					pose_msg.header.frame_id = settings_->frame_id;
-					pose_cov_msg.header.frame_id = settings_->frame_id;
-				}
-
-				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
-				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 
 				insnavgeod_has_arrived_pose_ = false;
 				// Wait as long as necessary (only when reading from SBF/PCAP file)

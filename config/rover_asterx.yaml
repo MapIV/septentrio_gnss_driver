@@ -186,9 +186,6 @@ baselink_pose_output:
     x: 0.65
     y: 0.0
     z: 1.353
-    yaw: 0.0
-    pitch: 0.0
-    roll: 0.0
 
   pose_topic: /sensing/ins/base_link/pose
   pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
