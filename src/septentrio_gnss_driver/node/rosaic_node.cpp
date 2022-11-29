@@ -351,6 +351,10 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.att_std_dev", settings_.att_std_dev, 5.0f);
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
+    // diagnostics_updater
+    param("diagnostics.hardware_id", settings_.hardware_id, std::string("septentrio"));
+    param("diagnostics.check_rate", settings_.check_rate, 1.0);
+
     // Additional Settings
     param("navsatfix_output.navsatfix_topic", settings_.navsatfix_topic, std::string("/navsatfix"));
 

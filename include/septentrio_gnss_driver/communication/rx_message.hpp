@@ -330,7 +330,10 @@ struct Settings
     //! Whether or not we are reading from a PCAP file
     bool read_from_pcap;
 
-    // add
+    // diagnostic_updater
+    std::string hardware_id;
+    double check_rate;
+
     std::string coordinate;
     std::string height_type;
     uint32_t plane_num;
@@ -435,7 +438,7 @@ namespace io_comm_rx {
             found_ = false;
             crc_check_ = false;
             message_size_ = 0;
-                    
+
             //! Pair of iterators to facilitate initialization of the map
             std::pair<uint16_t, TypeOfPVT_Enum> type_of_pvt_pairs[] = {
             std::make_pair(static_cast<uint16_t>(0), evNoPVT),
@@ -630,6 +633,8 @@ namespace io_comm_rx {
          * @brief Wether all blocks have arrived for Localization Message
          */
         bool ins_localization_complete(uint32_t id);
+
+        ReceiverStatus getReceiverStatus() { return last_receiverstatus_; };
 
     private:
         /**

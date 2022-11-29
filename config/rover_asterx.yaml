@@ -151,6 +151,10 @@ ins_use_poi: false
 
 activate_debug_log: true
 
+diagnostics: # enable: publish.diagnostics == true
+  hardware_id: septentrio_Asterx_SBi3
+  check_rate: 1.0 # sec
+
 # Additional Settings (INS Only)
 
 navsatfix_output:

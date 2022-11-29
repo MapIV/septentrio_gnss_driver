@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(diagnostic_updater REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(nmea_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -61,6 +62,7 @@ set(executable_name septentrio_gnss_driver_node)
 set(dependencies
    rclcpp
    rclcpp_components
+   diagnostic_updater
    diagnostic_msgs
    nmea_msgs
    sensor_msgs
@@ -85,6 +87,7 @@ add_library(${library_name} SHARED
    src/septentrio_gnss_driver/crc/crc.cpp
    src/septentrio_gnss_driver/communication/communication_core.cpp 
    src/septentrio_gnss_driver/communication/rx_message.cpp 
+   src/septentrio_gnss_driver/communication/diagnostic.cpp 
    src/septentrio_gnss_driver/communication/callback_handlers.cpp
    src/septentrio_gnss_driver/communication/pcap_reader.cpp
    src/septentrio_gnss_driver/converter/convert.cpp 
