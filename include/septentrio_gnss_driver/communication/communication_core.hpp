@@ -127,6 +127,8 @@ namespace io_comm_rx {
             connectionThread_->join();
         }
 
+        void initializeDiag();
+
         /**
          * @brief Initializes the I/O handling
          */

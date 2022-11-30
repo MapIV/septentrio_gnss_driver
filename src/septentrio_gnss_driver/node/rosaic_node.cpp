@@ -64,6 +64,8 @@ rosaic_node::ROSaicNode::ROSaicNode(const rclcpp::NodeOptions &options) :
     if (!getROSParams())
         return;
 
+    IO_.initializeDiag();
+
     // Initializes Connection
     IO_.initializeIO();
 

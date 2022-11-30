@@ -131,6 +131,12 @@ io_comm_rx::Comm_IO::Comm_IO(ROSaicNodeBase* node, Settings* settings) :
     g_read_cd = true;
     g_cd_count = 0;
 
+}
+
+void io_comm_rx::Comm_IO::initializeDiag()
+{
+    node_->log(LogLevel::DEBUG, "Called initializeDiag() method");
+    
     diagnostic_updater_.setHardwareID(settings_->hardware_id);
     diagnostic_updater_.add("software", this, &Comm_IO::check_software_error);
     diagnostic_updater_.add("watchdog", this, &Comm_IO::check_watchdog_error);
@@ -143,13 +149,14 @@ io_comm_rx::Comm_IO::Comm_IO(ROSaicNodeBase* node, Settings* settings) :
     diagnostic_updater_.add("cpu_load", this, &Comm_IO::check_cpu_load_state);
     diagnostic_updater_.add("connection", this, &Comm_IO::check_connection_state);
 
-    diagnostic_timer_ = node->create_wall_timer(std::chrono::duration<double>(settings_->check_rate), std::bind(&Comm_IO::diagnostic_update, this));
-
+    diagnostic_timer_ = node_->create_wall_timer(std::chrono::duration<double>(settings_->check_rate), std::bind(&Comm_IO::diagnostic_update, this));
+    node_->log(LogLevel::DEBUG, "Setting up diagnostic_updater");
 }
 
 void io_comm_rx::Comm_IO::initializeIO()
 {
     node_->log(LogLevel::DEBUG, "Called initializeIO() method");
+
     boost::smatch match;
     // In fact: smatch is a typedef of match_results<string::const_iterator>
     if (boost::regex_match(settings_->device, match, boost::regex("(tcp)://(.+):(\\d+)")))
@@ -322,6 +329,9 @@ void io_comm_rx::Comm_IO::reconnect()
             connection_condition_.notify_one();
         }
     }
+    
+    diagnostic_updater_.force_update();
+
     node_->log(LogLevel::DEBUG, "Leaving reconnect() method");
 }
 

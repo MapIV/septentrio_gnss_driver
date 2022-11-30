@@ -129,6 +129,8 @@ void io_comm_rx::Comm_IO::check_antenna_state(
 void io_comm_rx::Comm_IO::check_cpu_load_state(
     diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
+    node_->log(LogLevel::DEBUG, "Called check_cpu_load_state() method");
+
     uint8_t level = 0;
     std::string msg = "OK";
 
@@ -146,6 +148,8 @@ void io_comm_rx::Comm_IO::check_cpu_load_state(
 void io_comm_rx::Comm_IO::check_connection_state(
     diagnostic_updater::DiagnosticStatusWrapper& stat)
 {
+    node_->log(LogLevel::DEBUG, "Called check_connection_state() method");
+    
     uint8_t level = 0;
     std::string msg = "OK";
 
@@ -160,6 +164,8 @@ void io_comm_rx::Comm_IO::check_connection_state(
 
 void io_comm_rx::Comm_IO::diagnostic_update()
 {
+    node_->log(LogLevel::DEBUG, "Called diagnostic_update() method");
+    
     if (is_connect_)
         last_receiverstatus_ = handlers_.getRxMessage().getReceiverStatus();
     
