@@ -2466,6 +2466,14 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 
 				// raw pose output
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
+
+				insnavgeod_has_arrived_pose_ = false;
+				// Wait as long as necessary (only when reading from SBF/PCAP file)
+				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
+				{
+					wait(time_obj);
+				}
+
 				lla_msg.header.stamp = timestampToRos(time_obj);
 				lla_msg.header.frame_id = settings_->frame_id;
 				node_->publishMessage<PoseWithCovarianceStampedMsg>("/ins_pose_raw", lla_msg);
@@ -2540,6 +2548,9 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				pose_cov_msg.pose.pose.orientation = corrected_orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
+				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
+				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
+
 				// convert base_link
 				TransformStampedMsg rotation;
 				rotation.transform.translation.x = 0.0;
@@ -2565,22 +2576,13 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				baselink_pose_msg.pose.position.y = converted.y + converted_ins_to_baselink.transform.translation.y;
 				baselink_pose_msg.pose.position.z = converted.z + converted_ins_to_baselink.transform.translation.z;
 				baselink_pose_msg.pose.orientation = corrected_orientation;
-
+  
 				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
 				baselink_pose_cov_msg.header = lla_msg.header;
 				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
 				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				insnavgeod_has_arrived_pose_ = false;
-				// Wait as long as necessary (only when reading from SBF/PCAP file)
-				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
-				{
-					wait(time_obj);
-				}
-
-				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
-				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
 				node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
 				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->baselink_pose_cov_topic, baselink_pose_cov_msg);
 				break;

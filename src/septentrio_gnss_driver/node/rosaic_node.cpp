@@ -382,6 +382,10 @@ bool rosaic_node::ROSaicNode::getROSParams()
         param("baselink_pose_output.ins_to_baselink.x", ins_to_baselink_x, 0.0f);
         param("baselink_pose_output.ins_to_baselink.y", ins_to_baselink_y, 0.0f);
         param("baselink_pose_output.ins_to_baselink.z", ins_to_baselink_z, 0.0f);
+        
+        settings_.ins_to_baselink.transform.translation.x = ins_to_baselink_x;
+        settings_.ins_to_baselink.transform.translation.y = ins_to_baselink_y;
+        settings_.ins_to_baselink.transform.translation.z = ins_to_baselink_z;
     }
 
     param("baselink_pose_output.pose_topic", settings_.baselink_pose_topic, std::string("/baslink_pose"));
