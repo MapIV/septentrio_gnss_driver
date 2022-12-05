@@ -176,7 +176,7 @@ void QuatMsg2RPY(const geometry_msgs::msg::Quaternion & quat_msg, double & roll,
 void RPY2QuatMsg(const double & roll, const double & pitch, const double & yaw, geometry_msgs::msg::Quaternion & quat_msg)
 {
   tf2::Quaternion quat;
-  quat.setEuler(yaw, pitch, roll);
+  quat.setRPY(roll, pitch, yaw);
   quat_msg = tf2::toMsg(quat);
 }
 
