@@ -33,7 +33,7 @@ use_ros_axis_orientation: true
 
 receiver_type: ins
 
-multi_antenna: false
+multi_antenna: true
 
 datum: WGS84
 # WGS84:    Equivalent to Default
@@ -53,10 +53,16 @@ att_offset:
   heading: 90.0
   pitch: 0.0
   
-ant_type: Unknown
-ant_serial_nr: Unknown
-ant_aux1_type: Unknown
-ant_aux1_serial_nr: Unknown
+ant_type: "AERAT1675_382 NONE"
+ant_serial_nr: ""
+ant_aux1_type: "AERAT1675_382 NONE"
+ant_aux1_serial_nr: ""
+
+# ant_type:
+# - PolaNt Choke Ring B3/E6: "SEPCHOKE_B3E6 SPKE", "SEPCHOKE_B3E6 NONE" 
+# - Veraphase 6000: "TWIVP6050_CONE NONE"
+# - PolaNt-x-MF: "SEPPOLANT_X_MF NONE"
+# - PolaNt*MC: "AERAT1675_382 NONE"
 
 leap_seconds: 18
 
@@ -137,56 +143,59 @@ ins_initial_heading: auto
 
 ins_std_dev_mask:
   att_std_dev: 5.0
-  pos_std_dev: 1.0
+  pos_std_dev: 10.0
 
-ins_use_poi: false
+ins_use_poi: true
 
 # Logger
 
 activate_debug_log: true
+
+diagnostics: # Required: publish.diagnostics == true
+  hardware_id: septentrio_Asterx_SBi3
+  check_rate: 1.0 # sec
 
 # Additional Settings (INS Only)
 
 navsatfix_output:
   navsatfix_topic: /sensing/ins/asterx_i3/navsatfix
 
-pose_output:
-  pose_topic: /sensing/ins/asterx_i3/pose
-  pose_with_cov_topic: /sensing/ins/asterx_i3/pose_with_covariance
-
+coordinate_convert:
   coordinate: MGRS
   height_type: Orthometric
   plane_num: 7
+  correct_meridian_convergence: true
 
   # coordinate:
   # - PLANE
   # - MGRS
 
   # height_type:
-  # - Orthometric (標高)
-  # - Ellipsoid (楕円体高)
+  # - Orthometric
+  # - Ellipsoid
 
   # plane_num (Required PLANE output only): 1 ~ 19
+
+pose_output:
+  pose_topic: /sensing/ins/asterx_i3/pose
+  pose_with_cov_topic: /sensing/ins/asterx_i3/pose_with_covariance
 
 baselink_pose_output:
   config_from_tf: false
   
   # using config_from_tf == false
-  ins_to_baselink:
+  baselink_to_ins:
     x: 0.65
     y: 0.0
     z: 1.353
-    yaw: 0.0
-    pitch: 0.0
-    roll: 0.0
 
   pose_topic: /sensing/ins/base_link/pose
   pose_with_cov_topic: /sensing/ins/base_link/pose_with_covariance
 
 output_stopping_limit:
-  max_longitude_covariance: 1.0
-  max_latitude_covariance: 1.0
-  max_height_covariance: 5.0
+  max_longitude_covariance: 10.0
+  max_latitude_covariance: 10.0
+  max_height_covariance: 50.0
 
   INSNavGeod_Error_enable: [7, 20, 21, 23, 24, 28, 29, 30, 31, 32]
 
@@ -200,14 +209,3 @@ output_stopping_limit:
   # 30: waiting for the IMU to synchronize with PPS from the receiver
   # 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
   # 32: unsupported settings in INS
-
-  # 7:  輸出法によりポジション出力禁止
-  # 20: ユーザーが要求していないINSソリューション
-  # 21: 十分な有効な外部センサー測定値がありません
-  # 23: 静的アライメント進行中
-  # 24: GNSS PVT を待機中
-  # 28: インモーションアライメント進行中
-  # 29: GNSSヘディングを待っています
-  # 30: IMUが受信機からのPPSと同期するのを待っています
-  # 31: INSソリューションの標準偏差が、setINSStdDevMask コマンドによって設定されたユーザー制限を超えています
-  # 32: INSでサポートされていない設定

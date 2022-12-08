@@ -1747,6 +1747,48 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			poscovgeodetic_has_arrived_gpsfix_ = true;
 			poscovgeodetic_has_arrived_navsatfix_ = true;
 			poscovgeodetic_has_arrived_pose_ = true;
+
+			StringMsg mode_msg;
+			switch (last_poscovgeodetic_.mode)
+			{
+			case 0: 
+				mode_msg.data = "No PVT available (the Error field indicates the cause of the absence of the PVT solution)";
+				break;
+			case 1: 
+				mode_msg.data = "Stand-Alone PVT";
+				break;
+			case 2: 
+				mode_msg.data = "Differential PVT";
+				break;
+			case 3: 
+				mode_msg.data = "Fixed location";
+				break;
+			case 4: 
+				mode_msg.data = "RTK with fixed ambiguities";
+				break;
+			case 5: 
+				mode_msg.data = "RTK with float ambiguities";
+				break;
+			case 6: 
+				mode_msg.data = "SBAS aided PVT";
+				break;
+			case 7: 
+				mode_msg.data = "moving-base RTK with fixed ambiguities";
+				break;
+			case 8: 
+				mode_msg.data = "moving-base RTK with float ambiguities";
+				break;
+			case 10: 
+				mode_msg.data = "Precise Point Positioning (PPP)";
+				break;
+			case 12: 
+				mode_msg.data = "Reserved";
+				break;
+			default:
+				node_->log(LogLevel::ERROR, "septentrio_gnss_driver: parse error in PosCovGeodetic.Mode");
+				break;
+			} 
+
 			// Wait as long as necessary (only when reading from SBF/PCAP file)
 			if (settings_->read_from_sbf_log || settings_->read_from_pcap)
 			{
@@ -1754,6 +1796,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			}
 			if (settings_->publish_poscovgeodetic)
 				node_->publishMessage<PosCovGeodeticMsg>("/poscovgeodetic", last_poscovgeodetic_);
+				node_->publishMessage<StringMsg>("/poscovgeodetic_mode", mode_msg);
 			break;
 		}
 		case evAttEuler:
@@ -2378,11 +2421,6 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			case evINSPoseWithCovarianceStamped:
 			{
 				PoseWithCovarianceStampedMsg lla_msg;
-				PoseWithCovarianceStampedMsg pose_cov_msg;
-				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
-				PoseStampedMsg pose_msg;
-				PoseStampedMsg baselink_pose_msg;
-				NavSatFixMsg navsatfix_msg;
 
 				bool output_enable = true;
 				int error_code = last_insnavgeod_.error;
@@ -2469,18 +2507,32 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
-				GNSSStat lla, converted;
-				lla.latitude = lla_msg.pose.pose.position.y;
-				lla.longitude = lla_msg.pose.pose.position.x;
-				lla.altitude = lla_msg.pose.pose.position.z;
-
+				// raw pose output
 				Timestamp time_obj = timestampSBF(data_, settings_->use_gnss_time);
-				navsatfix_msg.header.stamp = timestampToRos(time_obj);
-				navsatfix_msg.header.frame_id = "ins";
-				navsatfix_msg.latitude = lla.latitude;
-				navsatfix_msg.longitude = lla.longitude;
-				navsatfix_msg.altitude = lla.altitude;
+
+				insnavgeod_has_arrived_pose_ = false;
+				// Wait as long as necessary (only when reading from SBF/PCAP file)
+				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
+				{
+					wait(time_obj);
+				}
+
+				lla_msg.header.stamp = timestampToRos(time_obj);
+				lla_msg.header.frame_id = settings_->frame_id;
+				node_->publishMessage<PoseWithCovarianceStampedMsg>("/ins_pose_raw", lla_msg);
+
+				NavSatFixMsg navsatfix_msg;
+				navsatfix_msg.header = lla_msg.header;
+				navsatfix_msg.latitude = lla_msg.pose.pose.position.y;
+				navsatfix_msg.longitude = lla_msg.pose.pose.position.x;
+				navsatfix_msg.altitude = lla_msg.pose.pose.position.z;
 				node_->publishMessage<NavSatFixMsg>(settings_->navsatfix_topic, navsatfix_msg);
+
+				// convert coordinate
+				GNSSStat lla, converted;
+				lla.latitude = navsatfix_msg.latitude;
+				lla.longitude = navsatfix_msg.longitude;
+				lla.altitude = navsatfix_msg.altitude;
 
 				try
 				{
@@ -2508,72 +2560,72 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
                     break;
 				}
 
+				// heading correction
+				geometry_msgs::msg::Quaternion corrected_orientation;
+				if (settings_->correct_heading)
+				{
+					double meridian_convergence = getMeridianConvergence(lla, converted, settings_->coordinate, settings_->plane_num);
+
+					double yaw, pitch, roll;
+					QuatMsg2RPY(lla_msg.pose.pose.orientation, roll, pitch, yaw);
+					yaw -= meridian_convergence;
+					RPY2QuatMsg(roll, pitch, yaw, corrected_orientation);
+				}
+				else
+				{
+					corrected_orientation = lla_msg.pose.pose.orientation;
+				}
+
+				PoseStampedMsg pose_msg;
+				pose_msg.header = lla_msg.header;
 				pose_msg.pose.position.x = converted.x;
 				pose_msg.pose.position.y = converted.y;
 				pose_msg.pose.position.z = converted.z;
-				pose_msg.pose.orientation = lla_msg.pose.pose.orientation;
+				pose_msg.pose.orientation = corrected_orientation;
 
+				PoseWithCovarianceStampedMsg pose_cov_msg;
+				pose_cov_msg.header = lla_msg.header;
 				pose_cov_msg.pose.pose.position.x = converted.x;
 				pose_cov_msg.pose.pose.position.y = converted.y;
 				pose_cov_msg.pose.pose.position.z = converted.z;
-				pose_cov_msg.pose.pose.orientation = lla_msg.pose.pose.orientation;
+				pose_cov_msg.pose.pose.orientation = corrected_orientation;
 				pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				geometry_msgs::msg::TransformStamped rotation, translation;
+				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
+				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
+
+				// convert base_link
+				TransformStampedMsg rotation;
 				rotation.transform.translation.x = 0.0;
 				rotation.transform.translation.y = 0.0;
 				rotation.transform.translation.z = 0.0;
-				rotation.transform.rotation = lla_msg.pose.pose.orientation;
+				rotation.transform.rotation = corrected_orientation;
 
+				TransformStampedMsg converted_baselink_to_ins;
 				try
 				{
-					tf2::doTransform(settings_->ins_to_baselink, translation, rotation);
+					tf2::doTransform(settings_->baselink_to_ins, converted_baselink_to_ins, rotation);
 				}
 				catch (std::runtime_error& e)
 				{
 					node_->log(LogLevel::ERROR, "base_link convert: " + std::string(e.what()));
                     break;
 				}
-				
-				baselink_pose_msg.pose.position.x += translation.transform.translation.x;
-				baselink_pose_msg.pose.position.y += translation.transform.translation.y;
-				baselink_pose_msg.pose.position.z += translation.transform.translation.z;
-				baselink_pose_msg.pose.orientation.x += translation.transform.rotation.x;
-				baselink_pose_msg.pose.orientation.y += translation.transform.rotation.y;
-				baselink_pose_msg.pose.orientation.z += translation.transform.rotation.z;
-				baselink_pose_msg.pose.orientation.w += translation.transform.rotation.w;
 
+				PoseStampedMsg baselink_pose_msg;
+				baselink_pose_msg.header = lla_msg.header;
+				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
+				baselink_pose_msg.pose.position.x = converted.x + converted_baselink_to_ins.transform.translation.x;
+				baselink_pose_msg.pose.position.y = converted.y + converted_baselink_to_ins.transform.translation.y;
+				baselink_pose_msg.pose.position.z = converted.z + converted_baselink_to_ins.transform.translation.z;
+				baselink_pose_msg.pose.orientation = corrected_orientation;
+  
+				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;
+				baselink_pose_cov_msg.header = lla_msg.header;
+				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
 				baselink_pose_cov_msg.pose.pose = baselink_pose_msg.pose;
 				baselink_pose_cov_msg.pose.covariance = lla_msg.pose.covariance;
 
-				pose_msg.header = navsatfix_msg.header;
-				pose_cov_msg.header = navsatfix_msg.header;
-				baselink_pose_msg.header = navsatfix_msg.header;
-				baselink_pose_cov_msg.header = navsatfix_msg.header;
-				
-				if (settings_->ins_use_poi)
-				{
-					pose_msg.header.frame_id = settings_->poi_frame_id;
-					pose_cov_msg.header.frame_id = settings_->poi_frame_id;
-				}
-				else
-				{
-					pose_msg.header.frame_id = settings_->frame_id;
-					pose_cov_msg.header.frame_id = settings_->frame_id;
-				}
-
-				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
-				baselink_pose_cov_msg.header.frame_id = settings_->vehicle_frame_id;
-
-				insnavgeod_has_arrived_pose_ = false;
-				// Wait as long as necessary (only when reading from SBF/PCAP file)
-				if (settings_->read_from_sbf_log || settings_->read_from_pcap)
-				{
-					wait(time_obj);
-				}
-
-				node_->publishMessage<PoseStampedMsg>(settings_->pose_topic, pose_msg);
-				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->pose_cov_topic, pose_cov_msg);
 				node_->publishMessage<PoseStampedMsg>(settings_->baselink_pose_topic, baselink_pose_msg);
 				node_->publishMessage<PoseWithCovarianceStampedMsg>(settings_->baselink_pose_cov_topic, baselink_pose_cov_msg);
 				break;

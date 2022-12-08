@@ -123,17 +123,40 @@ io_comm_rx::Comm_IO::Comm_IO(ROSaicNodeBase* node, Settings* settings) :
     node_(node),
     handlers_(node, settings),
     settings_(settings),
-    stopping_(false)
+    stopping_(false),
+    diagnostic_updater_(node)
 {
     g_response_received = false;
     g_cd_received = false;
     g_read_cd = true;
     g_cd_count = 0;
+
+}
+
+void io_comm_rx::Comm_IO::initializeDiag()
+{
+    node_->log(LogLevel::DEBUG, "Called initializeDiag() method");
+    
+    diagnostic_updater_.setHardwareID(settings_->hardware_id);
+    diagnostic_updater_.add("software", this, &Comm_IO::check_software_error);
+    diagnostic_updater_.add("watchdog", this, &Comm_IO::check_watchdog_error);
+    diagnostic_updater_.add("antenna_error", this, &Comm_IO::check_antenna_error);
+    diagnostic_updater_.add("congestion", this, &Comm_IO::check_congestion_error);
+    diagnostic_updater_.add("missed_event", this, &Comm_IO::check_missedevent_error);
+    diagnostic_updater_.add("invalid_config", this, &Comm_IO::check_invalidconfig_error);
+    diagnostic_updater_.add("out_of_geofence", this, &Comm_IO::check_outofgeofence_error);
+    diagnostic_updater_.add("antenna_state", this, &Comm_IO::check_antenna_state);
+    diagnostic_updater_.add("cpu_load", this, &Comm_IO::check_cpu_load_state);
+    diagnostic_updater_.add("connection", this, &Comm_IO::check_connection_state);
+
+    diagnostic_timer_ = node_->create_wall_timer(std::chrono::duration<double>(settings_->check_rate), std::bind(&Comm_IO::diagnostic_update, this));
+    node_->log(LogLevel::DEBUG, "Setting up diagnostic_updater");
 }
 
 void io_comm_rx::Comm_IO::initializeIO()
 {
     node_->log(LogLevel::DEBUG, "Called initializeIO() method");
+
     boost::smatch match;
     // In fact: smatch is a typedef of match_results<string::const_iterator>
     if (boost::regex_match(settings_->device, match, boost::regex("(tcp)://(.+):(\\d+)")))
@@ -261,6 +284,7 @@ void io_comm_rx::Comm_IO::reconnect()
                                        ", targeted baudrate: " + std::to_string(settings_->baudrate));
             initialize_serial_return =
                 initializeSerial(settings_->device, settings_->baudrate, settings_->hw_flow_control);
+            is_connect_ = true;
         } catch (std::runtime_error& e)
         {
             {
@@ -268,6 +292,7 @@ void io_comm_rx::Comm_IO::reconnect()
                 ss << "initializeSerial() failed for device " << settings_->device
                     << " due to: " << e.what();
                 node_->log(LogLevel::ERROR, ss.str());
+                is_connect_ = false;
             }
         }
         if (initialize_serial_return)
@@ -285,6 +310,7 @@ void io_comm_rx::Comm_IO::reconnect()
             node_->log(LogLevel::INFO, "Connecting to tcp://" + tcp_host_ + ":" + tcp_port_ +
                                        "...");
             initialize_tcp_return = initializeTCP(tcp_host_, tcp_port_);
+            is_connect_ = true;
         } catch (std::runtime_error& e)
         {
             {
@@ -292,6 +318,7 @@ void io_comm_rx::Comm_IO::reconnect()
                 ss << "initializeTCP() failed for host " << tcp_host_
                     << " on port " << tcp_port_ << " due to: " << e.what();
                 node_->log(LogLevel::ERROR, ss.str());
+                is_connect_ = false;
             }
         }
         if (initialize_tcp_return)
@@ -302,6 +329,9 @@ void io_comm_rx::Comm_IO::reconnect()
             connection_condition_.notify_one();
         }
     }
+    
+    diagnostic_updater_.force_update();
+
     node_->log(LogLevel::DEBUG, "Leaving reconnect() method");
 }
 

@@ -75,9 +75,15 @@
 #include <memory>
 #include <sstream>
 #include <unistd.h> // for usleep()
+#include <chrono>
 // ROSaic includes
 #include <septentrio_gnss_driver/communication/async_manager.hpp>
 #include <septentrio_gnss_driver/communication/callback_handlers.hpp>
+
+// ROS include
+#include "rclcpp/rclcpp.hpp"
+#include "diagnostic_updater/diagnostic_updater.hpp"
+
 
 /**
  * @file communication_core.hpp
@@ -121,6 +127,8 @@ namespace io_comm_rx {
             connectionThread_->join();
         }
 
+        void initializeDiag();
+
         /**
          * @brief Initializes the I/O handling
          */
@@ -137,7 +145,7 @@ namespace io_comm_rx {
          * @brief Defines which Rx messages to read and which ROS messages to publish
          * @param[in] settings The device's settings
          * */
-        void defineMessages();        
+        void defineMessages();
 
     private:
         /**
@@ -260,6 +268,24 @@ namespace io_comm_rx {
         //! after setting the baudrate to certain value (important between
         //! increments)
         const static unsigned int SET_BAUDRATE_SLEEP_ = 500000;
+
+        // diagnostic_updater
+        rclcpp::TimerBase::SharedPtr diagnostic_timer_;
+        diagnostic_updater::Updater diagnostic_updater_;
+        bool is_connect_ = false;
+        ReceiverStatus last_receiverstatus_;
+        
+        void check_software_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_watchdog_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_antenna_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_congestion_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_missedevent_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_invalidconfig_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_outofgeofence_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_antenna_state(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_cpu_load_state(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void check_connection_state(diagnostic_updater::DiagnosticStatusWrapper& stat);
+        void diagnostic_update();
     };
 } // namespace io_comm_rx
 

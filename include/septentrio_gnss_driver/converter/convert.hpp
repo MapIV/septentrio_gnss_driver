@@ -24,6 +24,9 @@
 #include <GeographicLib/MGRS.hpp>
 #include <GeographicLib/UTMUPS.hpp>
 
+#include <tf2/convert.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <string>
 
 enum class MGRSPrecision {
@@ -71,6 +74,12 @@ struct GNSSStat
   double altitude;
 };
 
+struct Vector2d
+{
+  double x;
+  double y;
+};
+
 double LLA2OrthometricHeight(const GNSSStat & lla);
 
 GNSSStat LLA2LocalCartesian(const GNSSStat & lla, const GNSSStat & lla_origin);
@@ -82,5 +91,15 @@ GNSSStat UTM2MGRS(const GNSSStat & utm, const MGRSPrecision & precision);
 GNSSStat LLA2MGRS(const GNSSStat & lla, const MGRSPrecision & precision);
 
 GNSSStat LLA2PLANE(const GNSSStat & lla, const int & plane_zone);
+
+double getDotNorm(Vector2d a, Vector2d b);
+
+double getCrossNorm(Vector2d a, Vector2d b);
+
+double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & converted, const std::string & coordinate, const int & plane_zone);
+
+void QuatMsg2RPY(const geometry_msgs::msg::Quaternion & quat_msg, double & roll, double & pitch, double & yaw);
+
+void RPY2QuatMsg(const double & roll, const double & pitch, const double & yaw, geometry_msgs::msg::Quaternion & quat_msg);
 
 #endif  // GNSS_POSER__CONVERT_HPP_

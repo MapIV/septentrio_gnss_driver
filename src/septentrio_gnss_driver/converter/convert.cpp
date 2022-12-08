@@ -122,3 +122,61 @@ GNSSStat LLA2PLANE(const GNSSStat & lla, const int & plane_zone)
 
   return plane;
 }
+
+double getDotNorm(Vector2d a, Vector2d b)
+{
+  return a.x * b.x + a.y * b.y;
+}
+
+double getCrossNorm(Vector2d a, Vector2d b)
+{
+  return a.x * b.y - a.y * b.x;
+}
+
+double getMeridianConvergence(const GNSSStat & lla, const GNSSStat & converted, const std::string & coordinate, const int & plane_zone)
+{
+  GNSSStat offset_lla = lla;
+  GNSSStat offset_converted = converted;
+
+  GNSSStat offset_lla_converted;
+
+  offset_lla.latitude += 0.01; // neary 1.11km
+  offset_converted.y += 1000.0; // 1km
+  if (coordinate == "PLANE")
+  {
+    offset_lla_converted = LLA2PLANE(offset_lla, plane_zone);
+  }
+  else if (coordinate == "MGRS")
+  {
+    offset_lla_converted = LLA2MGRS(offset_lla, MGRSPrecision::_1_MIllI_METER);
+  }
+
+  Vector2d offset_converted_vec;
+  Vector2d offset_lla_converted_vec;
+
+  offset_converted_vec.x = offset_converted.x - converted.x;
+  offset_converted_vec.y = offset_converted.y - converted.y;
+  offset_lla_converted_vec.x = offset_lla_converted.x - converted.x;
+  offset_lla_converted_vec.y = offset_lla_converted.y - converted.y;
+  
+  double dot_norm = getDotNorm(offset_converted_vec, offset_lla_converted_vec);
+  double cross_norm = getCrossNorm(offset_converted_vec, offset_lla_converted_vec);
+
+  return atan2(cross_norm, dot_norm);
+}
+
+void QuatMsg2RPY(const geometry_msgs::msg::Quaternion & quat_msg, double & roll, double & pitch, double & yaw)
+{
+  tf2::Quaternion quat_tf;
+  tf2::fromMsg(quat_msg, quat_tf);
+  tf2::Matrix3x3 m(quat_tf);
+  m.getRPY(roll, pitch, yaw);
+}
+
+void RPY2QuatMsg(const double & roll, const double & pitch, const double & yaw, geometry_msgs::msg::Quaternion & quat_msg)
+{
+  tf2::Quaternion quat;
+  quat.setRPY(roll, pitch, yaw);
+  quat_msg = tf2::toMsg(quat);
+}
+

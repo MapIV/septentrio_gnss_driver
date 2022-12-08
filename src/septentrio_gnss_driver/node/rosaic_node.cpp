@@ -64,6 +64,8 @@ rosaic_node::ROSaicNode::ROSaicNode(const rclcpp::NodeOptions &options) :
     if (!getROSParams())
         return;
 
+    IO_.initializeDiag();
+
     // Initializes Connection
     IO_.initializeIO();
 
@@ -351,56 +353,60 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("ins_std_dev_mask.att_std_dev", settings_.att_std_dev, 5.0f);
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
 
+    // diagnostics_updater
+    param("diagnostics.hardware_id", settings_.hardware_id, std::string("septentrio"));
+    param("diagnostics.check_rate", settings_.check_rate, 1.0);
+
     // Additional Settings
-    param("navsatfix_output.navsatfix_topic", settings_.navsatfix_topic, std::string("/navsatfix"));
-
-    param("pose_output.pose_topic", settings_.pose_topic, std::string("/pose"));
-    param("pose_output.pose_with_cov_topic", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
-    param("pose_output.coordinate", settings_.coordinate, std::string("PLANE"));
-    param("pose_output.height_type", settings_.height_type, std::string("Orthometric"));
-    getUint32Param("pose_output.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
-
-    bool config_from_tf = false;
-    param("baselink_pose_output.config_from_tf", config_from_tf, false);
-    if (config_from_tf)
+    if (settings_.septentrio_receiver_type == "ins")
     {
-        getTransform(settings_.vehicle_frame_id, settings_.frame_id, settings_.ins_to_baselink);
+        param("navsatfix_output.navsatfix_topic", settings_.navsatfix_topic, std::string("/navsatfix"));
+
+        param("coordinate_convert.coordinate", settings_.coordinate, std::string("PLANE"));
+        param("coordinate_convert.height_type", settings_.height_type, std::string("Orthometric"));
+        getUint32Param("coordinate_convert.plane_num", settings_.plane_num, static_cast<uint32_t>(7));
+        param("coordinate_convert.correct_meridian_convergence", settings_.correct_heading, true);
+
+        param("pose_output.pose_topic", settings_.pose_topic, std::string("/pose"));
+        param("pose_output.pose_with_cov_topic", settings_.pose_cov_topic, std::string("/pose_with_covariance"));
+        
+        bool config_from_tf = false;
+        param("baselink_pose_output.config_from_tf", config_from_tf, false);
+        if (config_from_tf)
+        {
+            getTransform(settings_.frame_id, settings_.vehicle_frame_id, settings_.baselink_to_ins);
+        }
+        else
+        {
+            float baselink_to_ins_x, baselink_to_ins_y, baselink_to_ins_z;
+            tf2::Quaternion tf2_quat;
+
+            param("baselink_pose_output.baselink_to_ins.x", baselink_to_ins_x, 0.0f);
+            param("baselink_pose_output.baselink_to_ins.y", baselink_to_ins_y, 0.0f);
+            param("baselink_pose_output.baselink_to_ins.z", baselink_to_ins_z, 0.0f);
+            
+            settings_.baselink_to_ins.transform.translation.x = baselink_to_ins_x;
+            settings_.baselink_to_ins.transform.translation.y = baselink_to_ins_y;
+            settings_.baselink_to_ins.transform.translation.z = baselink_to_ins_z;
+        }
+
+        param("baselink_pose_output.pose_topic", settings_.baselink_pose_topic, std::string("/baslink_pose"));
+        param("baselink_pose_output.pose_with_cov_topic", settings_.baselink_pose_cov_topic, std::string("/baselink_pose_with_covariance"));
+        
+        this->declare_parameter("output_stopping_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
+        settings_.enabled_errors = this->get_parameter("output_stopping_limit.INSNavGeod_Error_enable").as_integer_array();
+        param("output_stopping_limit.max_longitude_covariance", settings_.min_lon_cov, 0.1f);
+        param("output_stopping_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
+        param("output_stopping_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
+
+        // for (auto &&i : settings_.enabled_errors)
+        // {
+        //     this->log(LogLevel::DEBUG , "output_stopping_limit.INSNavGeod_Error_enable: " + std::to_string(i));
+        // }
+        // this->log(LogLevel::DEBUG , "output_stopping_limit.max_longitude_covariance: " + std::to_string(settings_.min_lon_cov));
+        // this->log(LogLevel::DEBUG , "output_stopping_limit.max_latitude_covariance: " + std::to_string(settings_.min_lat_cov));
+        // this->log(LogLevel::DEBUG , "output_stopping_limit.max_height_covariance: " + std::to_string(settings_.min_height_cov));
     }
-    else
-    {
-        float ins_to_baselink_x, ins_to_baselink_y, ins_to_baselink_z, ins_to_baselink_yaw, ins_to_baselink_pitch, ins_to_baselink_roll;
-        tf2::Quaternion tf2_quat;
-
-        param("baselink_pose_output.ins_to_baselink.x", ins_to_baselink_x, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.y", ins_to_baselink_y, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.z", ins_to_baselink_z, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.yaw", ins_to_baselink_yaw, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.pitch", ins_to_baselink_pitch, 0.0f);
-        param("baselink_pose_output.ins_to_baselink.roll", ins_to_baselink_roll, 0.0f);
-
-        tf2_quat.setEuler(ins_to_baselink_yaw, ins_to_baselink_pitch, ins_to_baselink_roll);
-        settings_.ins_to_baselink.transform.translation.x = ins_to_baselink_x;
-        settings_.ins_to_baselink.transform.translation.y = ins_to_baselink_y;
-        settings_.ins_to_baselink.transform.translation.z = ins_to_baselink_z;
-        settings_.ins_to_baselink.transform.rotation = tf2::toMsg(tf2_quat);
-    }
-
-    param("baselink_pose_output.pose_topic", settings_.baselink_pose_topic, std::string("/baslink_pose"));
-    param("baselink_pose_output.pose_with_cov_topic", settings_.baselink_pose_cov_topic, std::string("/baselink_pose_with_covariance"));
-    
-    this->declare_parameter("output_stopping_limit.INSNavGeod_Error_enable",std::vector<int64_t>(1,0));
-    settings_.enabled_errors = this->get_parameter("output_stopping_limit.INSNavGeod_Error_enable").as_integer_array();
-    param("output_stopping_limit.max_longitude_covariance", settings_.min_lon_cov, 0.1f);
-    param("output_stopping_limit.max_latitude_covariance", settings_.min_lat_cov, 0.1f);
-    param("output_stopping_limit.max_height_covariance", settings_.min_height_cov, 5.0f);
-
-    // for (auto &&i : settings_.enabled_errors)
-    // {
-    //     this->log(LogLevel::DEBUG , "output_stopping_limit.INSNavGeod_Error_enable: " + std::to_string(i));
-    // }
-    // this->log(LogLevel::DEBUG , "output_stopping_limit.max_longitude_covariance: " + std::to_string(settings_.min_lon_cov));
-    // this->log(LogLevel::DEBUG , "output_stopping_limit.max_latitude_covariance: " + std::to_string(settings_.min_lat_cov));
-    // this->log(LogLevel::DEBUG , "output_stopping_limit.max_height_covariance: " + std::to_string(settings_.min_height_cov));
 
     // INS solution reference point
     param("ins_use_poi", settings_.ins_use_poi, false);

@@ -234,6 +234,8 @@ namespace io_comm_rx {
          */
         void readCallback(Timestamp recvTimestamp, const uint8_t* data, std::size_t& size);
 
+        RxMessage getRxMessage() { return rx_message_; };
+
         //! Callback handlers multimap for Rx messages; it needs to be public since
         //! we copy-assign (did not work otherwise) new callbackmap_, after inserting
         //! a pair to the multimap within the DefineMessages() method of the
