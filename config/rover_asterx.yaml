@@ -184,7 +184,7 @@ baselink_pose_output:
   config_from_tf: false
   
   # using config_from_tf == false
-  ins_to_baselink:
+  baselink_to_ins:
     x: 0.65
     y: 0.0
     z: 1.353

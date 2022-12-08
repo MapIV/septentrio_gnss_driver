@@ -2601,10 +2601,10 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				rotation.transform.translation.z = 0.0;
 				rotation.transform.rotation = corrected_orientation;
 
-				TransformStampedMsg converted_ins_to_baselink;
+				TransformStampedMsg converted_baselink_to_ins;
 				try
 				{
-					tf2::doTransform(settings_->ins_to_baselink, converted_ins_to_baselink, rotation);
+					tf2::doTransform(settings_->baselink_to_ins, converted_baselink_to_ins, rotation);
 				}
 				catch (std::runtime_error& e)
 				{
@@ -2615,9 +2615,9 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 				PoseStampedMsg baselink_pose_msg;
 				baselink_pose_msg.header = lla_msg.header;
 				baselink_pose_msg.header.frame_id = settings_->vehicle_frame_id;
-				baselink_pose_msg.pose.position.x = converted.x + converted_ins_to_baselink.transform.translation.x;
-				baselink_pose_msg.pose.position.y = converted.y + converted_ins_to_baselink.transform.translation.y;
-				baselink_pose_msg.pose.position.z = converted.z + converted_ins_to_baselink.transform.translation.z;
+				baselink_pose_msg.pose.position.x = converted.x + converted_baselink_to_ins.transform.translation.x;
+				baselink_pose_msg.pose.position.y = converted.y + converted_baselink_to_ins.transform.translation.y;
+				baselink_pose_msg.pose.position.z = converted.z + converted_baselink_to_ins.transform.translation.z;
 				baselink_pose_msg.pose.orientation = corrected_orientation;
   
 				PoseWithCovarianceStampedMsg baselink_pose_cov_msg;

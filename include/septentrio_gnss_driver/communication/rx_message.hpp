@@ -343,7 +343,7 @@ struct Settings
     std::string pose_topic;
     std::string pose_cov_topic;
 
-    TransformStampedMsg ins_to_baselink;
+    TransformStampedMsg baselink_to_ins;
     std::string baselink_pose_topic;
     std::string baselink_pose_cov_topic;
 
