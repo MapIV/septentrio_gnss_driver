@@ -33,7 +33,7 @@ use_ros_axis_orientation: true
 
 receiver_type: ins
 
-multi_antenna: false
+multi_antenna: true
 
 datum: WGS84
 # WGS84:    Equivalent to Default
@@ -145,13 +145,13 @@ ins_std_dev_mask:
   att_std_dev: 5.0
   pos_std_dev: 10.0
 
-ins_use_poi: false
+ins_use_poi: true
 
 # Logger
 
 activate_debug_log: true
 
-diagnostics: # enable: publish.diagnostics == true
+diagnostics: # Required: publish.diagnostics == true
   hardware_id: septentrio_Asterx_SBi3
   check_rate: 1.0 # sec
 
@@ -171,12 +171,10 @@ coordinate_convert:
   # - MGRS
 
   # height_type:
-  # - Orthometric (標高)
-  # - Ellipsoid (楕円体高)
+  # - Orthometric
+  # - Ellipsoid
 
   # plane_num (Required PLANE output only): 1 ~ 19
-  
-  # correct_meridian_convergence: 子午線収差角補正
 
 pose_output:
   pose_topic: /sensing/ins/asterx_i3/pose
@@ -211,14 +209,3 @@ output_stopping_limit:
   # 30: waiting for the IMU to synchronize with PPS from the receiver
   # 31: standard deviation of the INS solution exceeds user limit set by the setINSStdDevMask command
   # 32: unsupported settings in INS
-
-  # 7:  輸出法によりポジション出力禁止
-  # 20: ユーザーが要求していないINSソリューション
-  # 21: 十分な有効な外部センサー測定値がありません
-  # 23: 静的アライメント進行中
-  # 24: GNSS PVT を待機中
-  # 28: インモーションアライメント進行中
-  # 29: GNSSヘディングを待っています
-  # 30: IMUが受信機からのPPSと同期するのを待っています
-  # 31: INSソリューションの標準偏差が、setINSStdDevMask コマンドによって設定されたユーザー制限を超えています
-  # 32: INSでサポートされていない設定
