@@ -1747,6 +1747,48 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			poscovgeodetic_has_arrived_gpsfix_ = true;
 			poscovgeodetic_has_arrived_navsatfix_ = true;
 			poscovgeodetic_has_arrived_pose_ = true;
+
+			StringMsg mode_msg;
+			switch (last_poscovgeodetic_.mode)
+			{
+			case 0: 
+				mode_msg.data = "No PVT available (the Error field indicates the cause of the absence of the PVT solution)";
+				break;
+			case 1: 
+				mode_msg.data = "Stand-Alone PVT";
+				break;
+			case 2: 
+				mode_msg.data = "Differential PVT";
+				break;
+			case 3: 
+				mode_msg.data = "Fixed location";
+				break;
+			case 4: 
+				mode_msg.data = "RTK with fixed ambiguities";
+				break;
+			case 5: 
+				mode_msg.data = "RTK with float ambiguities";
+				break;
+			case 6: 
+				mode_msg.data = "SBAS aided PVT";
+				break;
+			case 7: 
+				mode_msg.data = "moving-base RTK with fixed ambiguities";
+				break;
+			case 8: 
+				mode_msg.data = "moving-base RTK with float ambiguities";
+				break;
+			case 10: 
+				mode_msg.data = "Precise Point Positioning (PPP)";
+				break;
+			case 12: 
+				mode_msg.data = "Reserved";
+				break;
+			default:
+				node_->log(LogLevel::ERROR, "septentrio_gnss_driver: parse error in PosCovGeodetic.Mode");
+				break;
+			} 
+
 			// Wait as long as necessary (only when reading from SBF/PCAP file)
 			if (settings_->read_from_sbf_log || settings_->read_from_pcap)
 			{
@@ -1754,6 +1796,7 @@ bool io_comm_rx::RxMessage::read(std::string message_key, bool search)
 			}
 			if (settings_->publish_poscovgeodetic)
 				node_->publishMessage<PosCovGeodeticMsg>("/poscovgeodetic", last_poscovgeodetic_);
+				node_->publishMessage<StringMsg>("/poscovgeodetic_mode", mode_msg);
 			break;
 		}
 		case evAttEuler:

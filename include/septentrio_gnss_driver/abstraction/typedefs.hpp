@@ -53,6 +53,7 @@
 #include <sensor_msgs/msg/time_reference.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <std_msgs/msg/string.hpp>
 // GNSS msg includes
 #include <septentrio_gnss_driver/msg/block_header.hpp>
 #include <septentrio_gnss_driver/msg/meas_epoch.hpp>
@@ -97,6 +98,7 @@ typedef sensor_msgs::msg::NavSatStatus                NavSatStatusMsg;
 typedef sensor_msgs::msg::TimeReference               TimeReferenceMsg;
 typedef sensor_msgs::msg::Imu                         ImuMsg;
 typedef nav_msgs::msg::Odometry                       LocalizationUtmMsg;
+typedef std_msgs::msg::String                         StringMsg;
 
 // Septentrio GNSS SBF messages
 typedef septentrio_gnss_driver::msg::BlockHeader           BlockHeaderMsg;
