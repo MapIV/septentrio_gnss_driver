@@ -7,7 +7,7 @@ device: tcp://192.168.3.1:28784
 serial:
   baudrate: 921600
   rx_serial_port: USB1
-  hw_flow_control: off
+  hw_flow_control: "off"
 
 login:
   user: ""
@@ -53,10 +53,10 @@ att_offset:
   heading: 0.0
   pitch: 0.0
   
-ant_type: ""
-ant_serial_nr: ""
-ant_aux1_type: ""
-ant_aux1_serial_nr: ""
+ant_type: "Unknown"
+ant_serial_nr: "Unknown"
+ant_aux1_type: "Unknown"
+ant_aux1_serial_nr: "Unknown"
 
 # ant_type:
 # - PolaNt Choke Ring B3/E6: "SEPCHOKE_B3E6 SPKE", "SEPCHOKE_B3E6 NONE" 
@@ -73,12 +73,12 @@ polling_period:
 use_gnss_time: false
 
 ntrip_settings:
-  mode: off
-  caster: 0
+  mode: "off"
+  caster: ""
   caster_port: 0
-  username: 0
-  password: 0
-  mountpoint: 0
+  username: ""
+  password: ""
+  mountpoint: ""
   ntrip_version: v2
   send_gga: auto
   rx_has_internet: false
@@ -102,7 +102,6 @@ publish:
   atteuler: false
   attcoveuler: true
   pose: true
-  pose_with_covariance: true
   diagnostics: true
   # For GNSS Rx only
   gpgsa: false
@@ -145,9 +144,9 @@ ins_std_dev_mask:
   att_std_dev: 5.0
   pos_std_dev: 10.0
 
-ins_use_poi: true
+ins_use_poi: false
 
-# Logger
+# logger
 
 activate_debug_log: true
 
