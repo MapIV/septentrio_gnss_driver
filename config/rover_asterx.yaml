@@ -1,0 +1,156 @@
+# Configuration Settings for the Rover Rx
+
+# GNSS/INS Parameters
+
+device: tcp://192.168.3.1:28784
+
+serial:
+  baudrate: 921600
+  rx_serial_port: USB1
+  hw_flow_control: off
+
+login:
+  user: ""
+  password: ""
+
+frame_id: ins
+
+imu_frame_id: imu
+
+poi_frame_id: base_link
+
+vsm_frame_id: vsm
+
+aux1_frame_id: aux1
+
+vehicle_frame_id: base_link
+
+get_spatial_config_from_tf: false
+
+lock_utm_zone: true
+
+use_ros_axis_orientation: true
+
+receiver_type: ins
+
+multi_antenna: true
+
+datum: WGS84
+# WGS84:    Equivalent to Default
+# ETRS89:   European ETRS89 (ETRF2000 realization)
+# NAD83:    NAD83(2011), North American Datum (2011)
+# NAD83_PA: NAD83(PA11), North American Datum, Paciﬁc plate (2011)
+# NAD83_MA: NAD83(MA11), North American Datum, Marianas plate (2011)
+# GDA94:    GDA94(2010), Geocentric Datum of Australia (2010)
+# GDA2020:  GDA2020, Geocentric Datum of Australia 2020
+
+poi_to_arp:
+  delta_e: 0.0
+  delta_n: 0.0
+  delta_u: 0.0
+
+att_offset:
+  heading: 0.0
+  pitch: 0.0
+  
+ant_type: ""
+ant_serial_nr: ""
+ant_aux1_type: ""
+ant_aux1_serial_nr: ""
+
+# ant_type:
+# - PolaNt Choke Ring B3/E6: "SEPCHOKE_B3E6 SPKE", "SEPCHOKE_B3E6 NONE" 
+# - Veraphase 6000: "TWIVP6050_CONE NONE"
+# - PolaNt-x-MF: "SEPPOLANT_X_MF NONE"
+# - PolaNt*MC: "AERAT1675_382 NONE"
+
+leap_seconds: 18
+
+polling_period:
+  pvt: 1000
+  rest: 20
+
+use_gnss_time: false
+
+ntrip_settings:
+  mode: off
+  caster: 0
+  caster_port: 0
+  username: 0
+  password: 0
+  mountpoint: 0
+  ntrip_version: v2
+  send_gga: auto
+  rx_has_internet: false
+  rtcm_version: RTCMv3
+  rx_input_corrections_tcp: 62001
+  rx_input_corrections_serial: USB2
+
+publish:
+  # For both GNSS and INS Rxs
+  navsatfix: true
+  gpsfix: false
+  gpgga: false
+  gprmc: false
+  gpst : false
+  measepoch: false
+  pvtcartesian: false
+  pvtgeodetic: false
+  poscovcartesian: false
+  poscovgeodetic: true
+  velcovgeodetic: false
+  atteuler: false
+  attcoveuler: true
+  pose: true
+  pose_with_covariance: true
+  diagnostics: true
+  # For GNSS Rx only
+  gpgsa: false
+  gpgsv: false
+  # For INS Rx only
+  insnavcart: false
+  insnavgeod: true
+  extsensormeas: false
+  imusetup: false
+  velsensorsetup: false
+  exteventinsnavcart: false
+  exteventinsnavgeod: false
+  imu: false
+  localization: false
+  tf: false
+
+# INS-Specific Parameters
+
+ins_spatial_config:
+  imu_orientation:
+    theta_x: 0.0
+    theta_y: 0.0
+    theta_z: 0.0
+  poi_lever_arm:
+    delta_x: 0.0
+    delta_y: 0.0
+    delta_z: 0.0
+  ant_lever_arm:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  vel_sensor_lever_arm:
+    vsm_x: 0.0
+    vsm_y: 0.0
+    vsm_z: 0.0
+
+ins_initial_heading: auto
+
+ins_std_dev_mask:
+  att_std_dev: 5.0
+  pos_std_dev: 10.0
+
+ins_use_poi: true
+
+# Logger
+
+activate_debug_log: true
+
+diagnostics:
+  hardware_id: septentrio_Asterx_SBi3
+  check_rate: 1.0 # sec

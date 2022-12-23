@@ -38,6 +38,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   
+  <depend>diagnostic_updater</depend>
   <depend>diagnostic_msgs</depend>
   <depend>nmea_msgs</depend>
   <depend>sensor_msgs</depend>

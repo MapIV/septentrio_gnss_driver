@@ -324,6 +324,10 @@ struct Settings
     bool read_from_sbf_log;
     //! Whether or not we are reading from a PCAP file
     bool read_from_pcap;
+
+    // diagnostic_updater
+    std::string hardware_id;
+    double check_rate;
 };
 
 //! Enum for NavSatFix's status.status field, which is obtained from PVTGeodetic's
@@ -606,6 +610,8 @@ namespace io_comm_rx {
          * @brief Wether all blocks have arrived for Localization Message
          */
         bool ins_localization_complete(uint32_t id);
+
+        ReceiverStatus getReceiverStatus() { return last_receiverstatus_; };
 
     private:
         /**

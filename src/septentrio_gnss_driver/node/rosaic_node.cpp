@@ -64,6 +64,8 @@ rosaic_node::ROSaicNode::ROSaicNode(const rclcpp::NodeOptions &options) :
     if (!getROSParams())
         return;
 
+    IO_.initializeDiag();
+
     // Initializes Connection
     IO_.initializeIO();
 
@@ -328,6 +330,10 @@ bool rosaic_node::ROSaicNode::getROSParams()
     // ins_std_dev_mask
     param("ins_std_dev_mask.att_std_dev", settings_.att_std_dev, 5.0f);
     param("ins_std_dev_mask.pos_std_dev", settings_.pos_std_dev, 10.0f);
+
+    // diagnostics_updater
+    param("diagnostics.hardware_id", settings_.hardware_id, std::string("septentrio"));
+    param("diagnostics.check_rate", settings_.check_rate, 1.0);
 
     // INS solution reference point
     param("ins_use_poi", settings_.ins_use_poi, false);
