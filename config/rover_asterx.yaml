@@ -153,3 +153,5 @@ activate_debug_log: true
 diagnostics:
   hardware_id: septentrio_Asterx_SBi3
   check_rate: 1.0 # sec
+
+override_settings: true

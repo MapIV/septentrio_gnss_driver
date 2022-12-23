@@ -335,6 +335,9 @@ bool rosaic_node::ROSaicNode::getROSParams()
     param("diagnostics.hardware_id", settings_.hardware_id, std::string("septentrio"));
     param("diagnostics.check_rate", settings_.check_rate, 1.0);
 
+    // option
+    param("override_settings", settings_.override_settings, true);
+
     // INS solution reference point
     param("ins_use_poi", settings_.ins_use_poi, false);
 

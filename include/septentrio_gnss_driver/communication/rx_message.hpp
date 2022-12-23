@@ -328,6 +328,9 @@ struct Settings
     // diagnostic_updater
     std::string hardware_id;
     double check_rate;
+
+    // option
+    bool override_settings;
 };
 
 //! Enum for NavSatFix's status.status field, which is obtained from PVTGeodetic's

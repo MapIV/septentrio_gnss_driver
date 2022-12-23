@@ -414,6 +414,12 @@ void io_comm_rx::Comm_IO::configureRx()
         rest_interval = rest_sec_or_msec + std::to_string(rx_period_rest);
     }
 
+    if (!settings_->override_settings)
+    {
+        node_->log(LogLevel::DEBUG, "Ignored configureRx() method");
+        return;
+    }
+
     // Credentials for login
     if (!settings_->login_user.empty() &&
         !settings_->login_password.empty())
