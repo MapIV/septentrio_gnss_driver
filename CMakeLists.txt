@@ -62,6 +62,7 @@ set(executable_name septentrio_gnss_driver_node)
 set(dependencies
    rclcpp
    rclcpp_components
+   diagnostic_updater
    diagnostic_msgs
    nmea_msgs
    sensor_msgs
