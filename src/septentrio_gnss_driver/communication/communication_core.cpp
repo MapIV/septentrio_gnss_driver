@@ -380,6 +380,12 @@ void io_comm_rx::Comm_IO::configureRx()
         // "lif", whose potentially false processing is harmless.
         send("lif, Identification \x0D");
     }
+    
+    if (!settings_->override_settings)
+    {
+        node_->log(LogLevel::DEBUG, "Ignored configureRx() method");
+        return;
+    }
 
     std::string pvt_interval;
     if (settings_->polling_period_pvt == 0)
@@ -412,12 +418,6 @@ void io_comm_rx::Comm_IO::configureRx()
             rest_sec_or_msec = "msec";
 
         rest_interval = rest_sec_or_msec + std::to_string(rx_period_rest);
-    }
-
-    if (!settings_->override_settings)
-    {
-        node_->log(LogLevel::DEBUG, "Ignored configureRx() method");
-        return;
     }
 
     // Credentials for login
