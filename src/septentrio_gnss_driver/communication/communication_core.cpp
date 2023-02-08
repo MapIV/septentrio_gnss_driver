@@ -691,7 +691,7 @@ void io_comm_rx::Comm_IO::configureRx()
             }
             {
                 std::stringstream ss;
-                ss << "sno, Stream" << std::to_string(stream) << ", IPS1, GGA+RMC, "
+                ss << "sno, Stream" << std::to_string(stream) << ", IPS1, GGA, "
                    << pvt_interval << " \x0D";
                 ++stream;
                 send(ss.str());
