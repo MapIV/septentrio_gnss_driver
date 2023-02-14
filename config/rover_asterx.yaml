@@ -53,10 +53,10 @@ att_offset:
   heading: 0.0
   pitch: 0.0
   
-ant_type: "Unknown"
-ant_serial_nr: "Unknown"
-ant_aux1_type: "Unknown"
-ant_aux1_serial_nr: "Unknown"
+ant_type: ''
+ant_serial_nr: ''
+ant_aux1_type: ''
+ant_aux1_serial_nr: ''
 
 # ant_type:
 # - PolaNt Choke Ring B3/E6: "SEPCHOKE_B3E6 SPKE", "SEPCHOKE_B3E6 NONE" 
@@ -154,4 +154,4 @@ diagnostics:
   hardware_id: septentrio_Asterx_SBi3
   check_rate: 1.0 # sec
 
-override_settings: true
+override_settings: false

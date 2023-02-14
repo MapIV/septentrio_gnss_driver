@@ -5,6 +5,7 @@
 
 #define ERROR_CPU_LOAD 100
 #define WARN_CPU_LOAD  95
+#define DISCONNECT_THRESHOULD  3
 
 void io_comm_rx::Comm_IO::check_software_error(
     diagnostic_updater::DiagnosticStatusWrapper& stat)
@@ -153,11 +154,24 @@ void io_comm_rx::Comm_IO::check_connection_state(
     uint8_t level = 0;
     std::string msg = "OK";
 
-    if (!is_connect_)
+    if (last_receiverstatus_.up_time == last_up_time_)
+        disconnect_sec_++;
+    else
+        disconnect_sec_ = 0;
+    
+    if (disconnect_sec_ >= DISCONNECT_THRESHOULD)
     {
+        is_connect_ = false;
         level = 2;
         msg = "Error";
+        node_->log(LogLevel::ERROR, "Reseiver disconnection!");
     }
+    else
+    {
+        is_connect_ = true;
+    }
+
+    last_up_time_ = last_receiverstatus_.up_time;
 
     stat.summary(level, msg);
 }
@@ -166,8 +180,7 @@ void io_comm_rx::Comm_IO::diagnostic_update()
 {
     node_->log(LogLevel::DEBUG, "Called diagnostic_update() method");
     
-    if (is_connect_)
-        last_receiverstatus_ = handlers_.getRxMessage().getReceiverStatus();
-    
+    last_receiverstatus_ = handlers_.getRxMessage().getReceiverStatus();
+
     diagnostic_updater_.force_update();
 }

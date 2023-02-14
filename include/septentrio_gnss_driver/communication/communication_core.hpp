@@ -274,6 +274,8 @@ namespace io_comm_rx {
         diagnostic_updater::Updater diagnostic_updater_;
         bool is_connect_ = false;
         ReceiverStatus last_receiverstatus_;
+        uint32_t last_up_time_ = 0;
+        uint32_t disconnect_sec_ = 0;
         
         void check_software_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
         void check_watchdog_error(diagnostic_updater::DiagnosticStatusWrapper& stat);
