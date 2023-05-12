@@ -154,24 +154,12 @@ void io_comm_rx::Comm_IO::check_connection_state(
     uint8_t level = 0;
     std::string msg = "OK";
 
-    if (last_receiverstatus_.up_time == last_up_time_)
-        disconnect_sec_++;
-    else
-        disconnect_sec_ = 0;
-    
-    if (disconnect_sec_ >= DISCONNECT_THRESHOULD)
+    if (!is_connect_)
     {
-        is_connect_ = false;
         level = 2;
         msg = "Error";
         node_->log(LogLevel::ERROR, "Reseiver disconnection!");
     }
-    else
-    {
-        is_connect_ = true;
-    }
-
-    last_up_time_ = last_receiverstatus_.up_time;
 
     stat.summary(level, msg);
 }
@@ -181,6 +169,19 @@ void io_comm_rx::Comm_IO::diagnostic_update()
     node_->log(LogLevel::DEBUG, "Called diagnostic_update() method");
     
     last_receiverstatus_ = handlers_.getRxMessage().getReceiverStatus();
+    INSNavGeodMsg insnavgeodmsg = handlers_.getRxMessage().getINSNavGeodMsg();
+
+    if (last_tow_ == insnavgeodmsg.block_header.tow)
+        disconnect_sec_++;
+    else
+        disconnect_sec_ = 0;
+
+    if (disconnect_sec_ >= DISCONNECT_THRESHOULD)
+        is_connect_ = false;
+    else
+        is_connect_ = true;
+
+    last_tow_ = insnavgeodmsg.block_header.tow;
 
     diagnostic_updater_.force_update();
 }

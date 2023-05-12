@@ -615,6 +615,7 @@ namespace io_comm_rx {
         bool ins_localization_complete(uint32_t id);
 
         ReceiverStatus getReceiverStatus() { return last_receiverstatus_; };
+        INSNavGeodMsg getINSNavGeodMsg() { return last_insnavgeod_; };
 
     private:
         /**
