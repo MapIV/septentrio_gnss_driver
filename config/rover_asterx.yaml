@@ -90,7 +90,7 @@ publish:
   # For both GNSS and INS Rxs
   navsatfix: true
   gpsfix: false
-  gpgga: false
+  gpgga: true
   gprmc: false
   gpst : false
   measepoch: false
