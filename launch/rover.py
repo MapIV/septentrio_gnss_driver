@@ -14,7 +14,7 @@ os.environ['RCUTILS_CONSOLE_OUTPUT_FORMAT'] = '{time}: [{name}] [{severity}]\t{m
 # Start as component:
 
 def generate_launch_description():
-    
+
     tf_imu = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
@@ -50,8 +50,11 @@ def generate_launch_description():
 
     composable_node = ComposableNode(
         name='septentrio_gnss_driver',
-        package='septentrio_gnss_driver', 
+        package='septentrio_gnss_driver',
         plugin='rosaic_node::ROSaicNode',
+        remappings=[
+            ("/gpgga", "/sensing/ins/gpgga"),
+        ],
         #emulate_tty=True,
         parameters=[LaunchConfiguration(name_arg_file_path)])
 
